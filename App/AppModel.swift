@@ -32,6 +32,8 @@ import Observation
     var welcomeRequests = 0
     /// A scene to open in the Studio; the menu bar icon view opens it.
     var studioRequest: UUID?
+    /// A picture to open in the wizard once the Library appears (debug launches only, for UI checks).
+    var pendingWizardImage: URL?
     var preferences: PausePreferences {
         didSet {
             Self.save(preferences, key: "pausePreferences")
@@ -63,6 +65,11 @@ import Observation
         #if DEBUG
         // Lets UI checks open a scene in the Studio without a click: IKIGAI_OPEN_STUDIO=<wallpaper id>.
         if let id = ProcessInfo.processInfo.environment["IKIGAI_OPEN_STUDIO"].flatMap(UUID.init) { studioRequest = id; return }
+        if let path = ProcessInfo.processInfo.environment["IKIGAI_OPEN_WIZARD"] {
+            pendingWizardImage = URL(fileURLWithPath: path)
+            libraryRequests += 1
+            return
+        }
         #endif
         // A first launch shouldn't leave people hunting for a menu bar icon.
         if !UserDefaults.standard.bool(forKey: Self.welcomeSeenKey) {
@@ -252,14 +259,22 @@ import Observation
 
     // MARK: Studio
 
-    /// Starts a scene from a picture; returns its id so the Studio can open it.
-    func createScene(from image: URL) async -> UUID? {
+    /// Installs what the picture wizard prepared, with the chosen look, as a new creation.
+    func createScene(from prepared: PictureSceneMaker.Prepared, look: PictureSceneMaker.Look) async -> UUID? {
+        let scene = PictureSceneMaker.scene(look, hasSubject: prepared.hasSubject)
         do {
-            let scene = try await Task.detached { [library] in try library.createScene(from: image) }.value
+            let installed = try await Task.detached { [library] in
+                let encoder = JSONEncoder()
+                encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+                try encoder.encode(scene).write(to: prepared.folder.appending(path: "scene.json"), options: .atomic)
+                let wallpaper = try library.importSceneFolder(at: prepared.folder)
+                return try library.update(wallpaper, title: prepared.title, tags: [WallpaperLibrary.creationsTag])
+            }.value
+            try? FileManager.default.removeItem(at: prepared.folder)
             reload()
-            return scene.id
+            return installed.id
         } catch {
-            alert = Self.message(for: error, item: image.lastPathComponent)
+            alert = Self.message(for: error, item: prepared.title)
             return nil
         }
     }

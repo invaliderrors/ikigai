@@ -103,8 +103,8 @@ private struct StudioEditor: View {
     }
 }
 
-/// Hosts the Studio's live scene; swaps in a new renderer view when the preview is rebuilt.
-private struct ScenePreview: NSViewRepresentable {
+/// Hosts a live scene (the Studio's, the wizard's); swaps in a new renderer view when the preview is rebuilt.
+struct ScenePreview: NSViewRepresentable {
     let host: SceneHost?
 
     func makeNSView(context: Context) -> NSView {

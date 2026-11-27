@@ -12,6 +12,7 @@ struct LibraryView: View {
     @State private var tagFilter: String?
     @State private var choosingFiles = false
     @State private var dropTargeted = false
+    @State private var wizard: WizardRequest?
 
     private var selected: InstalledWallpaper? { model.wallpaper(id: selection) }
 
@@ -90,6 +91,13 @@ struct LibraryView: View {
             }
         }
         .searchable(text: $search, placement: .toolbar, prompt: "Search wallpapers")
+        .sheet(item: $wizard) { PictureWizard(request: $0) }
+        .task {
+            if let image = model.pendingWizardImage {
+                model.pendingWizardImage = nil
+                wizard = WizardRequest(image: image)
+            }
+        }
         .fileImporter(isPresented: $choosingFiles, allowedContentTypes: [.movie, .folder, .ikigaiWallpaper], allowsMultipleSelection: true) { result in
             if case .success(let urls) = result { model.importItems(urls) }
         }
@@ -158,14 +166,10 @@ struct LibraryView: View {
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
-    /// Starts a scene from one picture and opens it in the Studio.
+    /// Starts the picture wizard, which builds a parallax scene and opens it in the Studio.
     private func newScene() {
         guard let image = pickImages(multiple: false)?.first else { return }
-        Task {
-            guard let id = await model.createScene(from: image) else { return }
-            selection = id
-            openWindow(id: WindowID.studio, value: id)
-        }
+        wizard = WizardRequest(image: image)
     }
 
     private var libraryTitle: some View {
