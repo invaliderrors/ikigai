@@ -77,7 +77,7 @@ struct WallpaperImage: View {
             }
         }
         .clipped()
-        .task(id: wallpaper?.id) {
+        .task(id: "\(wallpaper?.id.uuidString ?? "")-\(AppModel.shared.previewRevision)") {
             image = wallpaper.flatMap { NSImage(contentsOf: $0.previewURL) }
         }
     }

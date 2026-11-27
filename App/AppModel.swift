@@ -17,6 +17,9 @@ import Observation
     var alert: String?
     /// Bumped to ask for the Library window; the menu bar icon view opens it.
     var libraryRequests = 0
+    /// Bumped whenever a preview image is written, so images showing that wallpaper reload.
+    private(set) var previewRevision = 0
+    @ObservationIgnored private var previewAttempts: Set<UUID> = []
 
     private(set) var assignments: ScreenAssignments {
         didSet { Self.save(assignments, key: "screenAssignments") }
@@ -100,6 +103,23 @@ import Observation
         skippedCount = result.skipped.count
         assignments.keep(only: Set(wallpapers.map(\.id)))
         apply()
+        makeMissingPreviews()
+    }
+
+    /// One at a time, once per wallpaper per launch: a page that can't be previewed isn't retried in a loop.
+    private func makeMissingPreviews() {
+        let missing = wallpapers.filter {
+            $0.manifest.kind != .scene && !previewAttempts.contains($0.id)
+                && !FileManager.default.fileExists(atPath: $0.previewURL.path)
+        }
+        guard !missing.isEmpty else { return }
+        previewAttempts.formUnion(missing.map(\.id))
+        Task {
+            for wallpaper in missing {
+                try? await Thumbnailer.makePreview(for: wallpaper)
+                previewRevision += 1
+            }
+        }
     }
 
     /// Imports videos and web folders. Copying runs off the main thread; large videos take a while.
@@ -109,13 +129,12 @@ import Observation
             Task {
                 defer { importsInFlight -= 1 }
                 do {
-                    let imported = try await Task.detached { [library] in
+                    _ = try await Task.detached { [library] in
                         // Ask the file system: a dropped folder's URL doesn't always end in a slash.
                         let isFolder = (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
                         return isFolder ? try library.importWebFolder(at: url) : try library.importVideo(at: url)
                     }.value
-                    try? await Thumbnailer.makePreview(for: imported)  // a missing preview only costs the still
-                    reload()
+                    reload()  // also makes its preview
                 } catch {
                     alert = Self.message(for: error, item: url.lastPathComponent)
                 }
