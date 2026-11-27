@@ -2,22 +2,26 @@
 
 Each phase ends with something usable. Later phases may be reordered; earlier ones may not be skipped.
 
-## Phase 0 — Foundation ✅ (current)
+## Phase 0 — Foundation ✅
 
 - Xcode project (XcodeGen), SwiftUI app shell, `IkigaiKit` package
 - Wallpaper manifest v1 + safe package paths, with tests
 - CI: package tests + app build on every push
 - Vision, roadmap and architecture docs
 
-## Phase 1 — Player MVP: *"I use it every day"*
+## Phase 1 — Player MVP: *"I use it every day"* (in progress)
 
-- Desktop host: one window per display, joins all Spaces, handles displays being plugged in or removed
-- Pause policy: covered/fullscreen, battery, Low Power Mode, screen locked or asleep, an FPS cap
-- Video and web wallpapers
-- Library window: thumbnail grid, search, tags, import by drag and drop, `.ikigai` import/export
-- Menu bar: switch wallpaper, pause, open library
-- Different wallpaper per display, launch at login
-- Decide on distribution: Developer ID + notarization + Sparkle updates (likely), or the Mac App Store
+- [x] Desktop host: one window per display, joins all Spaces, handles displays being plugged in or removed
+- [x] Pause policy: covered, full screen, battery, Low Power Mode, screen locked or asleep
+- [ ] FPS cap (matters once scenes render; moves to Phase 2)
+- [x] Video and web wallpapers (web: own package only, network blocked)
+- [x] Library window: display strip, thumbnail grid, search, type filter, import by drag and drop
+- [ ] Tags, and `.ikigai` import/export
+- [x] Menu bar: Now Showing panel, pause and resume, switch wallpaper, open Library
+- [x] Different wallpaper per display, launch at login
+- [ ] Previews for web wallpapers
+- [ ] Welcome (first run) and the starter pack
+- [ ] Decide on distribution: Developer ID + notarization + Sparkle updates (likely), or the Mac App Store
 
 ## Phase 2 — Scene engine
 

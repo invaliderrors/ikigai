@@ -2,7 +2,7 @@
 
 **A live wallpaper engine for macOS.** Play, create and share animated wallpapers: anime, games, landscapes, abstract art, anything. The creator studio turns a single picture into a living wallpaper in about a minute.
 
-> Status: **Phase 0 — Foundation.** The app shell builds; wallpapers don't play yet. See the [roadmap](docs/ROADMAP.md).
+> Status: **Phase 1 — Player MVP, in progress.** Video and web wallpapers play on every screen and pause when unseen. See the [roadmap](docs/ROADMAP.md).
 
 ## Docs
 
