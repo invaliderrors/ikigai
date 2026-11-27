@@ -2,6 +2,10 @@ import SwiftUI
 
 @main
 struct IkigaiApp: App {
+    init() {
+        Marquee.registerBundledFont()
+    }
+
     var body: some Scene {
         MenuBarExtra("Ikigai", systemImage: "sparkles.rectangle.stack") {
             MenuBarContent()
