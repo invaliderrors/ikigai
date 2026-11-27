@@ -1,10 +1,11 @@
 import AppKit
+import CoreImage
 import Metal
 import MetalKit
 
 /// One image layer of a scene.
 public struct SceneLayer {
-    public enum Effect: Int32 { case none = 0, sway = 1, ripple = 2 }
+    public enum Effect: Int32 { case none = 0, sway = 1, ripple = 2, wave = 3, shake = 4, scroll = 5 }
 
     public var texture: MTLTexture
     /// 0 stays still; 1 moves most with the mouse.
@@ -15,14 +16,43 @@ public struct SceneLayer {
     /// The part of the image (in 0...1 texture coordinates, origin top-left) that has visible pixels.
     /// Only this rectangle is drawn, so a mostly transparent layer costs only what it covers.
     public var bounds: CGRect
+    /// A blurred copy of the layer drawn additively on top, pulsing gently; nil for no glow.
+    public var glowTexture: MTLTexture?
+    public var glow: Float
 
     public init(texture: MTLTexture, depth: Float, effect: Effect = .none, mask: MTLTexture? = nil,
-                bounds: CGRect = CGRect(x: 0, y: 0, width: 1, height: 1)) {
+                bounds: CGRect = CGRect(x: 0, y: 0, width: 1, height: 1), glowTexture: MTLTexture? = nil, glow: Float = 0) {
         self.texture = texture
         self.depth = depth
         self.effect = effect
         self.mask = mask
         self.bounds = bounds
+        self.glowTexture = glowTexture
+        self.glow = glow
+    }
+
+    /// A Gaussian-blurred copy, for depth of field and glow; done once at load, on the GPU through Core Image.
+    public static func blurred(_ image: CGImage, radius: Double, using context: CIContext) throws -> CGImage {
+        let input = CIImage(cgImage: image)
+        let output = input.clampedToExtent().applyingGaussianBlur(sigma: radius).cropped(to: input.extent)
+        guard let result = context.createCGImage(output, from: input.extent) else { throw CocoaError(.fileReadCorruptFile) }
+        return result
+    }
+
+    /// A scene's brightness, contrast and saturation baked into a layer image once at load, since a grade
+    /// never changes while a scene plays; 1 leaves the image as it is.
+    public static func graded(_ image: CGImage, brightness: Double, contrast: Double, saturation: Double,
+                              using context: CIContext) throws -> CGImage {
+        guard brightness != 1 || contrast != 1 || saturation != 1 else { return image }
+        let input = CIImage(cgImage: image)
+        let b = CGFloat(brightness)
+        let output = input
+            .applyingFilter("CIColorMatrix", parameters: ["inputRVector": CIVector(x: b, y: 0, z: 0, w: 0),
+                                                          "inputGVector": CIVector(x: 0, y: b, z: 0, w: 0),
+                                                          "inputBVector": CIVector(x: 0, y: 0, z: b, w: 0)])
+            .applyingFilter("CIColorControls", parameters: [kCIInputContrastKey: contrast, kCIInputSaturationKey: saturation])
+        guard let result = context.createCGImage(output, from: input.extent) else { throw CocoaError(.fileReadCorruptFile) }
+        return result
     }
 
     /// The rectangle of an image with any visible pixels, padded so effects that move pixels
@@ -51,21 +81,25 @@ public struct SceneLayer {
     public let device: MTLDevice
     public var layers: [SceneLayer]
     public var particleCount: Int
+    /// 0 snow, 1 rain, 2 dust, 3 petals, 4 embers.
+    public var particleStyle: Int32 = 0
     /// Called on a Metal completion thread with each frame's GPU time in seconds.
     public var onFrameCompleted: (@Sendable (_ gpuSeconds: Double) -> Void)?
 
     private let queue: MTLCommandQueue
     private let pipeline: MTLRenderPipelineState
+    private let glowPipeline: MTLRenderPipelineState
     private let particlePipeline: MTLRenderPipelineState
     private let blankMask: MTLTexture
     private let start = CACurrentMediaTime()
     private var parallax = SIMD2<Float>(0, 0)
 
+    // Field order and types mirror the structs in SceneShaders.
     private struct LayerUniforms {
-        var bounds: SIMD4<Float>, parallax: SIMD2<Float>, time: Float, depth: Float, overscan: Float, effect: Int32
+        var bounds: SIMD4<Float>, parallax: SIMD2<Float>, time: Float, depth: Float, overscan: Float, effect: Int32, glow: Float
     }
     private struct ParticleUniforms {
-        var parallax: SIMD2<Float>, time: Float, aspect: Float, size: Float
+        var parallax: SIMD2<Float>, time: Float, aspect: Float, size: Float, style: Int32
     }
 
     public init(device: MTLDevice, layers: [SceneLayer], particleCount: Int) throws {
@@ -76,20 +110,21 @@ public struct SceneLayer {
         self.particleCount = particleCount
 
         let library = try device.makeLibrary(source: SceneShaders.source, options: nil)
-        func pipeline(_ vertex: String, _ fragment: String) throws -> MTLRenderPipelineState {
+        func pipeline(_ vertex: String, _ fragment: String, additive: Bool = false) throws -> MTLRenderPipelineState {
             let descriptor = MTLRenderPipelineDescriptor()
             descriptor.vertexFunction = library.makeFunction(name: vertex)
             descriptor.fragmentFunction = library.makeFunction(name: fragment)
             let color = descriptor.colorAttachments[0]!
             color.pixelFormat = .bgra8Unorm
-            color.isBlendingEnabled = true  // premultiplied alpha over
+            color.isBlendingEnabled = true  // premultiplied alpha over, or light added on top
             color.sourceRGBBlendFactor = .one
             color.sourceAlphaBlendFactor = .one
-            color.destinationRGBBlendFactor = .oneMinusSourceAlpha
-            color.destinationAlphaBlendFactor = .oneMinusSourceAlpha
+            color.destinationRGBBlendFactor = additive ? .one : .oneMinusSourceAlpha
+            color.destinationAlphaBlendFactor = additive ? .one : .oneMinusSourceAlpha
             return try device.makeRenderPipelineState(descriptor: descriptor)
         }
         self.pipeline = try pipeline("layer_vertex", "layer_fragment")
+        self.glowPipeline = try pipeline("layer_vertex", "glow_fragment", additive: true)
         self.particlePipeline = try pipeline("particle_vertex", "particle_fragment")
 
         let white = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .r8Unorm, width: 1, height: 1, mipmapped: false)
@@ -119,23 +154,35 @@ public struct SceneLayer {
         else { return }
         let time = Float(CACurrentMediaTime() - start)
 
-        encoder.setRenderPipelineState(pipeline)
+        var current: MTLRenderPipelineState?  // switch state only when it changes
         for layer in layers where !layer.bounds.isEmpty {
             let b = layer.bounds
             var uniforms = LayerUniforms(bounds: SIMD4(Float(b.minX), Float(b.minY), Float(b.maxX), Float(b.maxY)),
                                          parallax: parallax, time: time, depth: layer.depth,
-                                         overscan: 1 + 0.03 * layer.depth, effect: layer.effect.rawValue)
+                                         overscan: 1 + 0.03 * layer.depth, effect: layer.effect.rawValue, glow: layer.glow)
+            if current !== pipeline { encoder.setRenderPipelineState(pipeline); current = pipeline }
             encoder.setVertexBytes(&uniforms, length: MemoryLayout<LayerUniforms>.stride, index: 0)
             encoder.setFragmentBytes(&uniforms, length: MemoryLayout<LayerUniforms>.stride, index: 0)
             encoder.setFragmentTexture(layer.texture, index: 0)
             encoder.setFragmentTexture(layer.mask ?? blankMask, index: 1)
             encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
+
+            if let glowTexture = layer.glowTexture, layer.glow > 0 {
+                // The bloom spreads past the layer's pixels, so its quad is wider than the layer's.
+                let g = b.insetBy(dx: -0.08, dy: -0.08).intersection(CGRect(x: 0, y: 0, width: 1, height: 1))
+                uniforms.bounds = SIMD4(Float(g.minX), Float(g.minY), Float(g.maxX), Float(g.maxY))
+                encoder.setRenderPipelineState(glowPipeline); current = glowPipeline
+                encoder.setVertexBytes(&uniforms, length: MemoryLayout<LayerUniforms>.stride, index: 0)
+                encoder.setFragmentBytes(&uniforms, length: MemoryLayout<LayerUniforms>.stride, index: 0)
+                encoder.setFragmentTexture(glowTexture, index: 0)
+                encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
+            }
         }
 
         if particleCount > 0 {
             let size = view.drawableSize
             var uniforms = ParticleUniforms(parallax: parallax, time: time,
-                                            aspect: Float(size.width / max(size.height, 1)), size: 0.006)
+                                            aspect: Float(size.width / max(size.height, 1)), size: 0.006, style: particleStyle)
             encoder.setRenderPipelineState(particlePipeline)
             encoder.setVertexBytes(&uniforms, length: MemoryLayout<ParticleUniforms>.stride, index: 0)
             encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4, instanceCount: particleCount)

@@ -1,9 +1,12 @@
 {
-  "version": 1,
-  "particles": 1500,
+  "version": 2,
+  "particles": 900,
+  "particleStyle": "dust",
+  "grade": { "brightness": 1.03, "contrast": 1.04, "saturation": 1.08 },
   "layers": [
     { "image": "sky.png" },
-    { "image": "mountains.png", "depth": 0.15 },
+    { "image": "sun.png", "depth": 0.05, "glow": 0.7 },
+    { "image": "mountains.png", "depth": 0.15, "blur": 0.25 },
     { "image": "hills.png", "depth": 0.3 },
     { "image": "forest.png", "depth": 0.5, "effect": "sway", "mask": "forest-mask.png" },
     { "image": "lake.png", "depth": 0.6, "effect": "ripple", "mask": "lake-mask.png" },
