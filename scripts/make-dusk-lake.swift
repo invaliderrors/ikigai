@@ -1,4 +1,4 @@
-// Generates the "Dusk Lake" starter scene: six PNG layers, two masks and scene.json.
+// Generates the "Dusk Lake" starter scene: seven PNG layers, two masks and scene.json (format version 2).
 // Usage: swift scripts/make-dusk-lake.swift "App/Resources/StarterPack/Dusk Lake"
 import CoreGraphics
 import Foundation
@@ -47,8 +47,8 @@ func trees(_ c: CGContext, fill: CGColor) {
 png("sky.png") { c in
     c.drawLinearGradient(CGGradient(colorsSpace: nil, colors: [color(0xF4B26C), color(0xA5607E), color(0x1B2350)] as CFArray, locations: [0, 0.45, 1])!,
                          start: CGPoint(x: 0, y: 420), end: CGPoint(x: 0, y: H), options: [.drawsBeforeStartLocation])
-    c.setFillColor(color(0xFFE6B8)); c.fillEllipse(in: CGRect(x: 1180, y: 520, width: 190, height: 190))
 }
+png("sun.png") { c in c.setFillColor(color(0xFFE6B8)); c.fillEllipse(in: CGRect(x: 1180, y: 520, width: 190, height: 190)) }
 png("mountains.png") { ridge($0, base: 560, amplitude: 260, frequency: 6.5, fill: color(0x5F5A8A)) }
 png("hills.png") { ridge($0, base: 430, amplitude: 160, frequency: 3.2, fill: color(0x3D3D6E)) }
 png("forest.png") { trees($0, fill: color(0x1E2A3A)) }
@@ -63,11 +63,14 @@ png("shore.png") { ridge($0, base: 70, amplitude: 60, frequency: 9, fill: color(
 
 let scene = """
 {
-  "version": 1,
-  "particles": 1500,
+  "version": 2,
+  "particles": 900,
+  "particleStyle": "dust",
+  "grade": { "brightness": 1.03, "contrast": 1.04, "saturation": 1.08 },
   "layers": [
     { "image": "sky.png" },
-    { "image": "mountains.png", "depth": 0.15 },
+    { "image": "sun.png", "depth": 0.05, "glow": 0.7 },
+    { "image": "mountains.png", "depth": 0.15, "blur": 0.25 },
     { "image": "hills.png", "depth": 0.3 },
     { "image": "forest.png", "depth": 0.5, "effect": "sway", "mask": "forest-mask.png" },
     { "image": "lake.png", "depth": 0.6, "effect": "ripple", "mask": "lake-mask.png" },
