@@ -24,6 +24,10 @@ targets:
     dependencies:
       - package: IkigaiKit
         product: IkigaiCore
+      - package: IkigaiKit
+        product: IkigaiRender
+      - package: IkigaiKit
+        product: IkigaiDesktop
     scheme: {}
     settings:
       base:

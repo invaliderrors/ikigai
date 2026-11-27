@@ -6,8 +6,8 @@
 App/                      SwiftUI app: menu bar, library, studio (MainActor by default)
 Packages/IkigaiKit/       Engine, as a local Swift package
   IkigaiCore              Manifest, package format, library storage. No AppKit; fully tested.
-  IkigaiDesktop  (Ph. 1)  Desktop windows, displays/Spaces/power monitoring, pause policy
-  IkigaiRender   (Ph. 2)  Metal scene renderer, video and web hosts
+  IkigaiRender   (Ph. 1)  Video and web players, previews; the Metal scene renderer joins in Phase 2
+  IkigaiDesktop  (Ph. 1)  Desktop windows, displays/Spaces/power monitoring (decisions via IkigaiCore's PausePolicy)
 project.yml               XcodeGen spec; the .xcodeproj is generated and not committed
 ```
 
