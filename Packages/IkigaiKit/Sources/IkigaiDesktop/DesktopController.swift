@@ -81,6 +81,16 @@ final class DesktopWindow: NSWindow {
         sync()
     }
 
+    /// Rebuilds every screen showing this wallpaper, after its content changed on disk (a Studio save).
+    public func reload(_ wallpaperID: UUID) {
+        for (id, stage) in stages where stage.wallpaperID == wallpaperID {
+            stage.host.setPlaying(false)
+            stage.window.orderOut(nil)
+            stages[id] = nil
+        }
+        sync()
+    }
+
     private func sync() {
         screens = ScreenInfo.connected()
         var next: [String: Stage] = [:]
