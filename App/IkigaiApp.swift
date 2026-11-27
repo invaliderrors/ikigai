@@ -25,6 +25,7 @@ struct IkigaiApp: App {
             if let wallpaperID { StudioView(wallpaperID: wallpaperID) }
         }
         .defaultSize(width: 1320, height: 820)
+        .commands { UndoCommands() }
         Window("Welcome to Ikigai", id: WindowID.welcome) {
             WelcomeView()
         }

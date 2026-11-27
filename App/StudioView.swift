@@ -53,6 +53,7 @@ private struct StudioEditor: View {
             Divider().overlay(Theme.line)
             InspectorPanel(studio: studio).frame(width: 300)
         }
+        .focusedSceneValue(\.studio, studio)
         .navigationTitle(studio.wallpaper?.manifest.title ?? "Studio")
         .navigationSubtitle(studio.status)
         .toolbar {
@@ -137,11 +138,21 @@ private struct LayersPanel: View {
             }
             .padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 8)
 
-            List(selection: $studio.selection) {
+            // Rows are tinted buttons rather than system selection, which would draw the grey highlight
+            // (DESIGN.md: Tint, Not Fill).
+            List {
                 // Shown top layer first; the document stores them back to front.
                 ForEach(studio.document.layers.indices.reversed(), id: \.self) { index in
-                    LayerRow(layer: studio.document.layers[index], folder: studio.wallpaper?.entryURL.deletingLastPathComponent())
-                        .tag(index)
+                    let selected = studio.selection == index
+                    Button { studio.selection = index } label: {
+                        LayerRow(layer: studio.document.layers[index], folder: studio.wallpaper?.entryURL.deletingLastPathComponent(),
+                                 selected: selected)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
+                    .listRowBackground(selected ? Theme.tungstenTint.clipShape(.rect(cornerRadius: 8)).padding(.horizontal, 6) : nil)
+                    .accessibilityAddTraits(selected ? .isSelected : [])
                 }
                 .onMove { offsets, destination in
                     guard let from = offsets.first else { return }
@@ -176,6 +187,7 @@ private struct LayersPanel: View {
 private struct LayerRow: View {
     let layer: SceneDocument.Layer
     let folder: URL?
+    var selected = false
     @State private var thumbnail: NSImage?
 
     var body: some View {
@@ -187,7 +199,8 @@ private struct LayerRow: View {
             .frame(width: 44, height: 28)
             .clipShape(.rect(cornerRadius: 4))
             VStack(alignment: .leading, spacing: 1) {
-                Text((layer.image as NSString).deletingPathExtension).font(.system(size: 12.5)).lineLimit(1)
+                Text((layer.image as NSString).deletingPathExtension).font(.system(size: 12.5, weight: selected ? .semibold : .regular))
+                    .foregroundStyle(selected ? Theme.tungsten : Theme.screen).lineLimit(1)
                 Text(summary).font(.system(size: 11)).foregroundStyle(Theme.screen3).lineLimit(1)
             }
         }
@@ -277,4 +290,29 @@ private struct InspectorPanel: View {
     panel.allowsMultipleSelection = multiple
     panel.message = multiple ? "Choose pictures to add as layers." : "Choose a black-and-white mask picture."
     return panel.runModal() == .OK ? panel.urls : nil
+}
+
+extension FocusedValues {
+    /// The Studio in the focused window, so Edit › Undo and Redo reach it.
+    @Entry var studio: StudioModel?
+}
+
+/// Edit › Undo and Redo: the focused Studio's history, or the normal responder chain (text fields) elsewhere.
+struct UndoCommands: Commands {
+    @FocusedValue(\.studio) private var studio
+
+    var body: some Commands {
+        CommandGroup(replacing: .undoRedo) {
+            Button("Undo") {
+                if let studio { studio.undo() } else { NSApp.sendAction(Selector(("undo:")), to: nil, from: nil) }
+            }
+            .keyboardShortcut("z")
+            .disabled(studio.map { !$0.history.canUndo } ?? false)
+            Button("Redo") {
+                if let studio { studio.redo() } else { NSApp.sendAction(Selector(("redo:")), to: nil, from: nil) }
+            }
+            .keyboardShortcut("z", modifiers: [.command, .shift])
+            .disabled(studio.map { !$0.history.canRedo } ?? false)
+        }
+    }
 }

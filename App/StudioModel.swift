@@ -12,6 +12,7 @@ import Observation
     var selection: Int?
     private(set) var status = "Saved"
     private(set) var preview: SceneHost?
+    private(set) var history = EditHistory<SceneDocument>()
 
     @ObservationIgnored private var saveTask: Task<Void, Never>?
     @ObservationIgnored private var rebuildTask: Task<Void, Never>?
@@ -35,7 +36,30 @@ import Observation
     // MARK: Editing
 
     func edit(_ change: (inout SceneDocument) -> Void) {
+        let before = document
         change(&document)
+        guard document != before else { return }
+        history.record(before: before)
+        applyToPreview()
+        scheduleSave()
+    }
+
+    // MARK: Undo and redo
+
+    func undo() {
+        guard let previous = history.undo(from: document) else { return }
+        restore(previous)
+    }
+
+    func redo() {
+        guard let next = history.redo(from: document) else { return }
+        restore(next)
+    }
+
+    /// Images added to the scene's folder stay there after an undo; they're small, and redo needs them.
+    private func restore(_ state: SceneDocument) {
+        document = state
+        if let selection, selection >= document.layers.count { self.selection = document.layers.indices.last }
         applyToPreview()
         scheduleSave()
     }
