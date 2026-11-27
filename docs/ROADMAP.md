@@ -39,7 +39,8 @@ Each phase ends with something usable. Later phases may be reordered; earlier on
 - [x] Studio: layer list, live canvas, inspector, autosave, Live on Desktop (first slice)
 - Canvas with direct manipulation, undo/redo
 - Mask brush, effect browser with live thumbnails
-- One-image wizard: depth estimation (Core ML), subject lifting (Vision), automatic parallax layers
+- [x] One-image wizard: subject lifting (Vision), background fill, four looks, automatic parallax layers
+- Depth estimation (Core ML) for more than two planes, if the two-layer result needs it
 - Templates and starter scenes
 - Live preview on the desktop while editing
 
