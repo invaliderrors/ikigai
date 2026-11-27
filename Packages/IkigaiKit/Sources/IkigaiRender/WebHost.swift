@@ -58,6 +58,21 @@ import WebKit
         }
     }
 
+    /// True once the page has finished loading, false if it didn't within the timeout (or never will,
+    /// when the network rules failed to compile).
+    public func waitUntilLoaded(timeout: Duration) async -> Bool {
+        // shortcut: polls every 100 ms; fine for one-off previews, use a continuation if anything hot needs it.
+        let deadline = ContinuousClock.now + timeout
+        while !loaded, ContinuousClock.now < deadline {
+            try? await Task.sleep(for: .milliseconds(100))
+        }
+        return loaded
+    }
+
+    public func snapshot() async -> NSImage? {
+        try? await webView.takeSnapshot(configuration: nil)
+    }
+
     public func setPlaying(_ playing: Bool) {
         guard playing != self.playing else { return }
         self.playing = playing
