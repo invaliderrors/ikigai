@@ -21,6 +21,11 @@ struct IkigaiApp: App {
                 .frame(minWidth: 900, minHeight: 560)
         }
         .defaultLaunchBehavior(.suppressed)
+        Window("Welcome to Ikigai", id: WindowID.welcome) {
+            WelcomeView()
+        }
+        .windowResizability(.contentSize)
+        .defaultLaunchBehavior(.suppressed)
         Settings {
             SettingsView()
         }
@@ -60,9 +65,15 @@ struct MenuBarIcon: View {
                 openWindow(id: WindowID.library)
                 NSApp.activate()
             }
+            .task(id: model.welcomeRequests) {
+                guard model.welcomeRequests > 0 else { return }
+                openWindow(id: WindowID.welcome)
+                NSApp.activate()
+            }
     }
 }
 
 enum WindowID {
     static let library = "library"
+    static let welcome = "welcome"
 }

@@ -1,0 +1,63 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Neon Grid</title>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#0b0718}canvas{display:block;width:100vw;height:100vh}</style>
+<canvas id="c"></canvas>
+<script>
+// Neon Grid — an original Ikigai starter wallpaper. Draws at 30 fps and stops while Ikigai pauses it.
+const c = document.getElementById('c'), x = c.getContext('2d');
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let W, H, t = 0, last = 0, running = true;
+
+function size() { const d = Math.min(devicePixelRatio, 1.5); W = c.width = innerWidth * d; H = c.height = innerHeight * d; draw(); }
+addEventListener('resize', size);
+document.addEventListener('ikigai:pause', () => running = false);
+document.addEventListener('ikigai:resume', () => { if (!running) { running = true; last = 0; requestAnimationFrame(loop); } });
+function loop(now) {
+  if (!running) return;
+  if (!last) last = now;
+  if (now - last >= 33) { t += (now - last) / 1000 * (still ? 0.12 : 1); last = now; draw(); }
+  requestAnimationFrame(loop);
+}
+
+function draw() {
+  const horizon = H * .58;
+  const sky = x.createLinearGradient(0, 0, 0, horizon);
+  sky.addColorStop(0, '#0b0718'); sky.addColorStop(.7, '#2a0f45'); sky.addColorStop(1, '#5a1450');
+  x.fillStyle = sky; x.fillRect(0, 0, W, horizon);
+
+  // A striped sun, cut by bands that widen toward the horizon.
+  const r = H * .2, cx = W / 2, cy = horizon - r * .35;
+  const sun = x.createLinearGradient(0, cy - r, 0, cy + r);
+  sun.addColorStop(0, '#ffd36b'); sun.addColorStop(1, '#ff3d8b');
+  x.save(); x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2); x.clip();
+  x.fillStyle = sun; x.fillRect(cx - r, cy - r, r * 2, r * 2);
+  x.fillStyle = '#2a0f45';
+  for (let i = 0; i < 7; i++) { const y = cy + r * (.1 + i * .14), h = r * .012 * (i + 1); x.fillRect(cx - r, y, r * 2, h); }
+  x.restore();
+
+  // Mountains in front of the sun.
+  x.fillStyle = '#12081f'; x.beginPath(); x.moveTo(0, horizon);
+  const peaks = [[0, .9], [.12, .7], [.22, .85], [.33, .62], [.45, .88], [.58, .66], [.7, .9], [.82, .68], [.92, .84], [1, .75]];
+  for (const [px, py] of peaks) x.lineTo(px * W, horizon - (1 - py) * H * .3);
+  x.lineTo(W, horizon); x.closePath(); x.fill();
+
+  x.fillStyle = '#0b0718'; x.fillRect(0, horizon, W, H - horizon);
+  x.save(); x.shadowColor = '#3df2ff'; x.shadowBlur = H * .008;
+  x.strokeStyle = 'rgba(61,242,255,.75)'; x.lineWidth = Math.max(1, H * .0015);
+  const scroll = (t * .35) % 1;
+  for (let i = 0; i < 26; i++) {  // horizontal lines rushing toward the viewer
+    const p = (i + scroll) / 26, y = horizon + Math.pow(p, 2.4) * (H - horizon);
+    x.globalAlpha = Math.min(1, p * 1.6); x.beginPath(); x.moveTo(0, y); x.lineTo(W, y); x.stroke();
+  }
+  x.globalAlpha = 1;
+  for (let i = -16; i <= 16; i++) {  // lines converging on the vanishing point
+    x.beginPath(); x.moveTo(cx + i * W * .012, horizon); x.lineTo(cx + i * W * .14, H); x.stroke();
+  }
+  x.restore();
+  const haze = x.createLinearGradient(0, horizon - H * .04, 0, horizon + H * .08);
+  haze.addColorStop(0, 'rgba(255,61,139,0)'); haze.addColorStop(.5, 'rgba(255,61,139,.35)'); haze.addColorStop(1, 'rgba(255,61,139,0)');
+  x.fillStyle = haze; x.fillRect(0, horizon - H * .04, W, H * .12);
+}
+size(); requestAnimationFrame(loop);
+</script>

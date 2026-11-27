@@ -20,19 +20,29 @@ extension UTType {
 
 // MARK: Buttons
 
-/// The one tungsten fill per screen.
+/// The one tungsten fill per screen. Disabled, it fades so it never looks pressable.
 struct PrimaryButtonStyle: ButtonStyle {
     var large = false
 
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: large ? 14 : 13, weight: .semibold))
-            .foregroundStyle(Theme.tungstenInk)
-            .padding(.horizontal, large ? 18 : 13)
-            .frame(minHeight: large ? 38 : 30)
-            .background(Theme.tungsten, in: .rect(cornerRadius: large ? 10 : 8))
-            .shadow(color: .black.opacity(0.4), radius: 1, y: 1)
-            .opacity(configuration.isPressed ? 0.85 : 1)
+        Filled(configuration: configuration, large: large)
+    }
+
+    private struct Filled: View {
+        let configuration: Configuration
+        let large: Bool
+        @Environment(\.isEnabled) private var isEnabled
+
+        var body: some View {
+            configuration.label
+                .font(.system(size: large ? 14 : 13, weight: .semibold))
+                .foregroundStyle(Theme.tungstenInk)
+                .padding(.horizontal, large ? 18 : 13)
+                .frame(minHeight: large ? 38 : 30)
+                .background(Theme.tungsten, in: .rect(cornerRadius: large ? 10 : 8))
+                .shadow(color: .black.opacity(isEnabled ? 0.4 : 0), radius: 1, y: 1)
+                .opacity(!isEnabled ? 0.35 : configuration.isPressed ? 0.85 : 1)
+        }
     }
 }
 

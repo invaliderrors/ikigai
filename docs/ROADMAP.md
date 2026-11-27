@@ -9,7 +9,7 @@ Each phase ends with something usable. Later phases may be reordered; earlier on
 - CI: package tests + app build on every push
 - Vision, roadmap and architecture docs
 
-## Phase 1 — Player MVP: *"I use it every day"* (in progress)
+## Phase 1 — Player MVP: *"I use it every day"* ✅
 
 - [x] Desktop host: one window per display, joins all Spaces, handles displays being plugged in or removed
 - [x] Pause policy: covered, full screen, battery, Low Power Mode, screen locked or asleep
@@ -21,8 +21,8 @@ Each phase ends with something usable. Later phases may be reordered; earlier on
 - [x] Menu bar: Now Showing panel, pause and resume, switch wallpaper, open Library
 - [x] Different wallpaper per display, launch at login
 - [x] Previews for web wallpapers
-- [ ] Welcome (first run) and the starter pack
-- [ ] Decide on distribution: Developer ID + notarization + Sparkle updates (likely), or the Mac App Store
+- [x] Welcome (first run) and a generative starter pack (placeholders until real art)
+- [x] Decide on distribution: Developer ID + notarization + Sparkle, direct download (see `docs/ARCHITECTURE.md`)
 
 ## Phase 2 — Scene engine
 

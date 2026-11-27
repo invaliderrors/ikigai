@@ -1,0 +1,57 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Tide</title>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#141a33}canvas{display:block;width:100vw;height:100vh}</style>
+<canvas id="c"></canvas>
+<script>
+// Tide — an original Ikigai starter wallpaper. Draws at 30 fps and stops while Ikigai pauses it.
+const c = document.getElementById('c'), x = c.getContext('2d');
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let W, H, t = 0, last = 0, running = true;
+
+function size() { const d = Math.min(devicePixelRatio, 1.5); W = c.width = innerWidth * d; H = c.height = innerHeight * d; draw(); }
+addEventListener('resize', size);
+document.addEventListener('ikigai:pause', () => running = false);
+document.addEventListener('ikigai:resume', () => { if (!running) { running = true; last = 0; requestAnimationFrame(loop); } });
+function loop(now) {
+  if (!running) return;
+  if (!last) last = now;
+  if (now - last >= 33) { t += (now - last) / 1000 * (still ? 0.12 : 1); last = now; draw(); }
+  requestAnimationFrame(loop);
+}
+
+// Far layers are pale and calm, near layers dark and tall.
+const layers = [
+  { y: .60, amp: .006, len: .9, speed: .25, color: '#8a7fa6' },
+  { y: .64, amp: .009, len: .7, speed: .35, color: '#5f5a8a' },
+  { y: .69, amp: .014, len: .55, speed: .45, color: '#3d3d6e' },
+  { y: .76, amp: .020, len: .45, speed: .6, color: '#272a52' },
+  { y: .85, amp: .028, len: .38, speed: .8, color: '#161a38' },
+];
+
+function draw() {
+  const sky = x.createLinearGradient(0, 0, 0, H * .62);
+  sky.addColorStop(0, '#1b2350'); sky.addColorStop(.55, '#a5607e'); sky.addColorStop(1, '#f4b26c');
+  x.fillStyle = sky; x.fillRect(0, 0, W, H);
+
+  const sunY = H * (.56 + Math.sin(t * .05) * .01), r = H * .09;
+  const glow = x.createRadialGradient(W * .62, sunY, 0, W * .62, sunY, r * 4);
+  glow.addColorStop(0, 'rgba(255,214,150,.55)'); glow.addColorStop(1, 'rgba(255,214,150,0)');
+  x.fillStyle = glow; x.fillRect(0, 0, W, H);
+  x.fillStyle = '#ffe6b8'; x.beginPath(); x.arc(W * .62, sunY, r, 0, Math.PI * 2); x.fill();
+
+  for (const [i, l] of layers.entries()) {
+    const base = H * l.y, amp = H * l.amp, k = (Math.PI * 2) / (W * l.len), phase = t * l.speed;
+    x.beginPath(); x.moveTo(0, H);
+    for (let px = 0; px <= W + 8; px += 8) {
+      const y = base + Math.sin(px * k + phase) * amp + Math.sin(px * k * 2.3 - phase * 1.3) * amp * .35;
+      x.lineTo(px, y);
+    }
+    x.lineTo(W, H); x.closePath(); x.fillStyle = l.color; x.fill();
+    if (i > 1) {  // sunlit crests on the nearer swells
+      x.strokeStyle = `rgba(255,214,160,${.06 + i * .03})`; x.lineWidth = H * .002; x.stroke();
+    }
+  }
+}
+size(); requestAnimationFrame(loop);
+</script>

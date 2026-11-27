@@ -22,8 +22,14 @@ import Observation
     @ObservationIgnored private var previewAttempts: Set<UUID> = []
 
     private(set) var assignments: ScreenAssignments {
-        didSet { Self.save(assignments, key: "screenAssignments") }
+        // A preview isn't the user's choice yet, so it's never saved: quitting mid-preview keeps what they had.
+        didSet { if assignmentsBeforePreview == nil { Self.save(assignments, key: "screenAssignments") } }
     }
+    /// The wallpaper being tried on the desktop from Welcome, not yet kept.
+    private(set) var previewing: UUID?
+    @ObservationIgnored private var assignmentsBeforePreview: ScreenAssignments?
+    private(set) var installingStarterPack = false
+    var welcomeRequests = 0
     var preferences: PausePreferences {
         didSet {
             Self.save(preferences, key: "pausePreferences")
@@ -52,7 +58,69 @@ import Observation
         }
         reload()
         // A first launch shouldn't leave people hunting for a menu bar icon.
-        if wallpapers.isEmpty { libraryRequests += 1 }
+        if !UserDefaults.standard.bool(forKey: Self.welcomeSeenKey) {
+            welcomeRequests += 1
+            Task { await installStarterPack() }
+        } else if wallpapers.isEmpty {
+            libraryRequests += 1
+        }
+    }
+
+    // MARK: Welcome and the starter pack
+
+    static let starterPackTag = "Starter Pack"
+    private static let welcomeSeenKey = "hasSeenWelcome"
+
+    var starterWallpapers: [InstalledWallpaper] {
+        wallpapers.filter { $0.manifest.tags.contains(Self.starterPackTag) }
+    }
+
+    /// Copies the bundled starter wallpapers into the library, skipping any already there.
+    func installStarterPack() async {
+        guard !installingStarterPack,
+              let pack = Bundle.main.url(forResource: "StarterPack", withExtension: nil),
+              let folders = try? FileManager.default.contentsOfDirectory(at: pack, includingPropertiesForKeys: nil)
+        else { return }
+        installingStarterPack = true
+        defer { installingStarterPack = false }
+        let installed = Set(starterWallpapers.map(\.manifest.title))
+        let tag = Self.starterPackTag
+        for folder in folders.sorted(by: { $0.lastPathComponent < $1.lastPathComponent })
+        where !installed.contains(folder.lastPathComponent) {
+            do {
+                try await Task.detached { [library] in
+                    let wallpaper = try library.importWebFolder(at: folder)
+                    try library.update(wallpaper, title: wallpaper.manifest.title, tags: [tag])
+                }.value
+            } catch {
+                alert = "The starter wallpaper “\(folder.lastPathComponent)” couldn't be added. \(error.localizedDescription)"
+            }
+        }
+        reload()
+    }
+
+    /// Shows a wallpaper everywhere without making it the user's choice yet.
+    func preview(_ wallpaper: InstalledWallpaper) {
+        if assignmentsBeforePreview == nil { assignmentsBeforePreview = assignments }
+        assignments.showEverywhere(wallpaper.id)
+        previewing = wallpaper.id
+        apply()
+    }
+
+    func keepPreview() {
+        assignmentsBeforePreview = nil
+        previewing = nil
+        Self.save(assignments, key: "screenAssignments")
+        UserDefaults.standard.set(true, forKey: Self.welcomeSeenKey)
+    }
+
+    /// Puts back exactly what the desktop showed before the preview. Closing Welcome counts as seen.
+    func endPreview() {
+        if let before = assignmentsBeforePreview { assignments = before }
+        assignmentsBeforePreview = nil
+        previewing = nil
+        apply()
+        UserDefaults.standard.set(true, forKey: Self.welcomeSeenKey)
     }
 
     // MARK: Reading
