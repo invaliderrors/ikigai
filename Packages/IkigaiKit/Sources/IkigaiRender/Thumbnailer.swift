@@ -14,8 +14,26 @@ import UniformTypeIdentifiers
         switch wallpaper.manifest.kind {
         case .video: try await makeVideoPreview(for: wallpaper)
         case .web: try await makeWebPreview(for: wallpaper)
-        case .scene: break  // Phase 2
+        case .scene: try makeScenePreview(for: wallpaper)
         }
+    }
+
+    /// The layers stacked as they first appear, without effects or particles: a CoreGraphics composite, no GPU.
+    private static func makeScenePreview(for wallpaper: InstalledWallpaper) throws {
+        let scene = try SceneDocument.load(entry: wallpaper.entryURL, package: wallpaper.packageURL)
+        guard let context = CGContext(data: nil, width: Int(size.width), height: Int(size.height), bitsPerComponent: 8,
+                                      bytesPerRow: 0, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { throw Failure.noImage }
+        context.interpolationQuality = .high
+        for layer in scene.layers {
+            let image = try SceneHost.cgImage(at: layer.image)
+            let scale = max(size.width / CGFloat(image.width), size.height / CGFloat(image.height))
+            let drawn = CGSize(width: CGFloat(image.width) * scale, height: CGFloat(image.height) * scale)
+            context.draw(image, in: CGRect(x: (size.width - drawn.width) / 2, y: (size.height - drawn.height) / 2,
+                                           width: drawn.width, height: drawn.height))
+        }
+        guard let image = context.makeImage() else { throw Failure.noImage }
+        try writeJPEG(image, to: wallpaper.previewURL)
     }
 
     /// A frame from one second in.

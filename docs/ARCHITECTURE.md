@@ -106,6 +106,20 @@ Not covered yet, to repeat before Phase 2 ships:
 
 Open decision: support Intel Macs or not. Apple Silicon is first either way.
 
+### Scene files
+
+A scene wallpaper's manifest entry is a `scene.json` next to its images:
+
+```json
+{ "version": 1, "particles": 1500,
+  "layers": [ { "image": "sky.png" },
+              { "image": "forest.png", "depth": 0.5, "effect": "sway", "mask": "forest-mask.png" } ] }
+```
+
+- Layers are drawn back to front. `depth` (0...1) sets how far a layer moves with the mouse, and `effect` is `none`, `sway` or `ripple`, scaled per pixel by an optional greyscale `mask`.
+- `scene.json` has its own `version`, so adding effects doesn't change the manifest format. Older readers refuse newer scene versions.
+- Loading is validation: every image and mask must exist inside the package, depth is clamped to 0...1, particles to 5,000, and there are at most 32 layers. The library only lists scenes that load.
+
 ## 3D layers (Phase 8)
 
 3D arrives as a new layer type inside 2D scenes, not as a separate kind of wallpaper. RealityKit renders the model; the scene engine composites it like any other layer.

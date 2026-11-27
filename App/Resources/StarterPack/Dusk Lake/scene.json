@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "particles": 1500,
+  "layers": [
+    { "image": "sky.png" },
+    { "image": "mountains.png", "depth": 0.15 },
+    { "image": "hills.png", "depth": 0.3 },
+    { "image": "forest.png", "depth": 0.5, "effect": "sway", "mask": "forest-mask.png" },
+    { "image": "lake.png", "depth": 0.6, "effect": "ripple", "mask": "lake-mask.png" },
+    { "image": "shore.png", "depth": 0.9 }
+  ]
+}

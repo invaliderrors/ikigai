@@ -89,7 +89,7 @@ import Observation
         where !installed.contains(folder.lastPathComponent) {
             do {
                 try await Task.detached { [library] in
-                    let wallpaper = try library.importWebFolder(at: folder)
+                    let wallpaper = try library.importFolder(at: folder)
                     try library.update(wallpaper, title: wallpaper.manifest.title, tags: [tag])
                 }.value
             } catch {
@@ -177,7 +177,7 @@ import Observation
     /// One at a time, once per wallpaper per launch: a page that can't be previewed isn't retried in a loop.
     private func makeMissingPreviews() {
         let missing = wallpapers.filter {
-            $0.manifest.kind != .scene && !previewAttempts.contains($0.id)
+            !previewAttempts.contains($0.id)
                 && !FileManager.default.fileExists(atPath: $0.previewURL.path)
         }
         guard !missing.isEmpty else { return }
@@ -200,7 +200,7 @@ import Observation
                     _ = try await Task.detached { [library] in
                         // Ask the file system: a dropped folder's URL doesn't always end in a slash.
                         let isFolder = (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
-                        if isFolder { return try library.importWebFolder(at: url) }
+                        if isFolder { return try library.importFolder(at: url) }
                         if url.pathExtension.lowercased() == WallpaperLibrary.packageExtension { return try library.importArchive(at: url) }
                         return try library.importVideo(at: url)
                     }.value
@@ -270,7 +270,7 @@ import Observation
         case .unsafeArchiveEntry(let entry)?:
             "“\(item)” was refused because it contains “\(entry)”, which could reach outside the wallpaper or is too large."
         case .invalidPackage?:
-            "“\(item)” is missing parts it needs to play."
+            "“\(item)” is missing parts it needs to play. A scene needs a scene.json whose images are all inside the folder."
         case nil where error is WallpaperManifest.DecodingFailure:
             "“\(item)” was made with a newer version of Ikigai. Update Ikigai to open it."
         case nil:

@@ -80,7 +80,9 @@ public struct WallpaperLibrary: Sendable {
               let entry = PackagePath.resolve(manifest.entry, in: url),
               FileManager.default.fileExists(atPath: entry.path),
               // PackagePath checks the text of the path; a symlink inside the package could still lead out.
-              entry.resolvingSymlinksInPath().path.hasPrefix(url.resolvingSymlinksInPath().path + "/")
+              entry.resolvingSymlinksInPath().path.hasPrefix(url.resolvingSymlinksInPath().path + "/"),
+              // A scene must load cleanly: every layer and mask it names, inside the package.
+              manifest.kind != .scene || (try? SceneDocument.load(entry: entry, package: url)) != nil
         else { return nil }
         return InstalledWallpaper(manifest: manifest, packageURL: url)
     }
@@ -224,6 +226,31 @@ public struct WallpaperLibrary: Sendable {
             if result.count == maxTags { break }
         }
         return result
+    }
+
+    /// A folder is a scene when it has a `scene.json`, otherwise a web wallpaper.
+    public func importFolder(at folder: URL) throws -> InstalledWallpaper {
+        FileManager.default.fileExists(atPath: folder.appending(path: "scene.json").path)
+            ? try importSceneFolder(at: folder)
+            : try importWebFolder(at: folder)
+    }
+
+    /// A scene is a folder with a `scene.json` and the images it names; everything in it is copied.
+    public func importSceneFolder(at folder: URL) throws -> InstalledWallpaper {
+        guard FileManager.default.fileExists(atPath: folder.appending(path: "scene.json").path) else {
+            throw ImportError.invalidPackage
+        }
+        try checkSize(of: folder)
+        let installed = try install(title: folder.lastPathComponent, kind: .scene, entry: "assets/scene.json") { assets in
+            for item in try FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil) {
+                try FileManager.default.copyItem(at: item, to: assets.appending(path: item.lastPathComponent))
+            }
+        }
+        guard Self.validated(packageAt: installed.packageURL) != nil else {
+            try? FileManager.default.removeItem(at: installed.packageURL)
+            throw ImportError.invalidPackage
+        }
+        return installed
     }
 
     public func trash(_ wallpaper: InstalledWallpaper) throws {

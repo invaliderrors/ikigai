@@ -27,6 +27,7 @@ Each phase ends with something usable. Later phases may be reordered; earlier on
 ## Phase 2 — Scene engine
 
 - [x] First week: the renderer spike against the budgets in `docs/ARCHITECTURE.md` (passed; results there)
+- [x] Scene files (`scene.json`) and scene wallpapers on the desktop, with Dusk Lake in the starter pack
 - Metal renderer: layer stack, transforms, blend modes, opacity
 - Mouse parallax, GPU particles with presets
 - Effect passes: wave, sway, shake, scroll, water ripple, glow/bloom, color grading, blur
