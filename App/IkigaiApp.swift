@@ -20,6 +20,9 @@ struct IkigaiApp: App {
                 .frame(minWidth: 900, minHeight: 560)
         }
         .defaultLaunchBehavior(.suppressed)
+        Settings {
+            SettingsView()
+        }
     }
 }
 
