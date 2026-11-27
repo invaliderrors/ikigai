@@ -83,6 +83,27 @@ Build the smallest renderer that can draw one real scene, measure it, and build 
 
 Report the results in the Phase 2 PR, with Instruments traces attached.
 
+#### Results (2026-11-27, baseline machine class)
+
+Measured with `swift run -c release IkigaiSpike 600` (in `Packages/IkigaiKit`) on an Apple Silicon MacBook's built-in 3600×2338 display: a 10-minute run with the test scene above.
+
+| Check | Target | Measured |
+|---|---|---|
+| Frame rate | 30 fps | 30.0 fps |
+| CPU while playing | < 3% of one core | 2.5% |
+| GPU time per frame | < 4 ms per 4K screen | 2.49 ms average, 2.53 ms p95 |
+| Memory | < 300 MB | 213 MB, flat across 10 minutes |
+| Paused | 0% CPU, no GPU work | 0.03% CPU, 0 frames |
+| Resume | < 100 ms | 29 ms |
+| Stability | no hitch > 2 frames in 10 minutes | 0 |
+
+**Verdict: pass. The rest of Phase 2 goes ahead.** The first run missed the GPU budget (5.7 ms): every layer was drawn full screen. Drawing only each layer's visible rectangle halved the fragment work and fixed it.
+
+Not covered yet, to repeat before Phase 2 ships:
+- The stretch machine: three displays, two of them 4K.
+- Instruments traces confirming GPU time and idle (the benchmark reads Metal's own GPU timestamps and CPU usage from the process).
+- Energy impact on battery, measured over an hour.
+
 Open decision: support Intel Macs or not. Apple Silicon is first either way.
 
 ## 3D layers (Phase 8)

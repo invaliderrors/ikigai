@@ -26,7 +26,7 @@ Each phase ends with something usable. Later phases may be reordered; earlier on
 
 ## Phase 2 — Scene engine
 
-- First week: the renderer spike against the budgets in `docs/ARCHITECTURE.md`; build the rest only once it passes
+- [x] First week: the renderer spike against the budgets in `docs/ARCHITECTURE.md` (passed; results there)
 - Metal renderer: layer stack, transforms, blend modes, opacity
 - Mouse parallax, GPU particles with presets
 - Effect passes: wave, sway, shake, scroll, water ripple, glow/bloom, color grading, blur
