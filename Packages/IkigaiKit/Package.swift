@@ -6,9 +6,11 @@ let package = Package(
     platforms: [.macOS(.v15)],
     products: [
         .library(name: "IkigaiCore", targets: ["IkigaiCore"]),
+        .library(name: "IkigaiRender", targets: ["IkigaiRender"]),
     ],
     targets: [
         .target(name: "IkigaiCore"),
+        .target(name: "IkigaiRender", dependencies: ["IkigaiCore"]),
         .testTarget(name: "IkigaiCoreTests", dependencies: ["IkigaiCore"]),
     ]
 )
