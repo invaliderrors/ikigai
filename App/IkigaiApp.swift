@@ -11,10 +11,11 @@ struct IkigaiApp: App {
 
     var body: some Scene {
         MenuBarExtra {
-            MenuBarContent()
+            MenuBarPanel()
         } label: {
             MenuBarIcon()
         }
+        .menuBarExtraStyle(.window)
         Window("Ikigai", id: WindowID.library) {
             LibraryView()
                 .frame(minWidth: 900, minHeight: 560)
@@ -58,19 +59,4 @@ struct MenuBarIcon: View {
 
 enum WindowID {
     static let library = "library"
-}
-
-struct MenuBarContent: View {
-    @Environment(\.openWindow) private var openWindow
-
-    var body: some View {
-        Button("Open Library…") {
-            openWindow(id: WindowID.library)
-            NSApp.activate()
-        }
-        .keyboardShortcut("l")
-        Divider()
-        Button("Quit Ikigai") { NSApp.terminate(nil) }
-            .keyboardShortcut("q")
-    }
 }
