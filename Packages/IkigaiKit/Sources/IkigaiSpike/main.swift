@@ -74,16 +74,19 @@ func trees(_ c: CGContext, fill: CGColor) {
 @MainActor func makeScene(device: MTLDevice) throws -> [SceneLayer] {
     let loader = MTKTextureLoader(device: device)
     func texture(_ image: CGImage) throws -> MTLTexture { try loader.newTexture(cgImage: image, options: [.SRGB: false]) }
-    func layer(_ image: CGImage, depth: Float, effect: SceneLayer.Effect = .none, mask: CGImage? = nil) throws -> SceneLayer {
-        SceneLayer(texture: try texture(image), depth: depth, effect: effect, mask: try mask.map(texture),
+    func layer(_ ungraded: CGImage, depth: Float, effect: SceneLayer.Effect = .none, mask: CGImage? = nil) throws -> SceneLayer {
+        // The scene's grade is baked into each image at load, as SceneHost does.
+        let image = try SceneLayer.graded(ungraded, brightness: 1.05, contrast: 1.08, saturation: 1.1, using: CIContext(mtlDevice: device))
+        return SceneLayer(texture: try texture(image), depth: depth, effect: effect, mask: try mask.map(texture),
                    bounds: SceneLayer.visibleBounds(of: image))
     }
 
     let sky = image { c in
         c.drawLinearGradient(CGGradient(colorsSpace: nil, colors: [color(0xF4B26C), color(0xA5607E), color(0x1B2350)] as CFArray, locations: [0, 0.45, 1])!,
                              start: CGPoint(x: 0, y: 420), end: CGPoint(x: 0, y: H), options: [.drawsBeforeStartLocation])
-        c.setFillColor(color(0xFFE6B8)); c.fillEllipse(in: CGRect(x: 1180, y: 520, width: 190, height: 190))
     }
+    let sun = image { c in c.setFillColor(color(0xFFE6B8)); c.fillEllipse(in: CGRect(x: 1180, y: 520, width: 190, height: 190)) }
+    let blur = CIContext(mtlDevice: device)
     let far = image { ridge($0, base: 560, amplitude: 260, frequency: 6.5, fill: color(0x5F5A8A)) }
     let hills = image { ridge($0, base: 430, amplitude: 160, frequency: 3.2, fill: color(0x3D3D6E)) }
     let forest = image { trees($0, fill: color(0x1E2A3A)) }
@@ -96,9 +99,13 @@ func trees(_ c: CGContext, fill: CGColor) {
     let waterMask = image { c in c.setFillColor(color(0xFFFFFF)); c.fill(CGRect(x: 0, y: 0, width: W, height: 360)) }
     let grass = image { ridge($0, base: 70, amplitude: 60, frequency: 9, fill: color(0x0B0F1E)) }
 
+    var sunLayer = try layer(sun, depth: 0.05)
+    sunLayer.glowTexture = try texture(SceneLayer.blurred(sun, radius: 40, using: blur))
+    sunLayer.glow = 0.8
     let layers = [
         try layer(sky, depth: 0),
-        try layer(far, depth: 0.15),
+        sunLayer,
+        try layer(SceneLayer.blurred(far, radius: 9, using: blur), depth: 0.15),  // depth of field, made at load
         try layer(hills, depth: 0.3),
         try layer(forest, depth: 0.5, effect: .sway, mask: forestMask),
         try layer(water, depth: 0.6, effect: .ripple, mask: waterMask),
@@ -134,6 +141,8 @@ func trees(_ c: CGContext, fill: CGColor) {
             let view = MTKView(frame: CGRect(origin: .zero, size: screen.frame.size))
             guard let renderer = try? SceneRenderer(device: device, layers: layers, particleCount: 2000) else { continue }
             renderer.attach(to: view)
+            // IKIGAI_PARTICLES=0...4 picks snow, rain, dust, petals or embers; petals by default.
+            renderer.particleStyle = Int32(ProcessInfo.processInfo.environment["IKIGAI_PARTICLES"] ?? "").flatMap { $0 } ?? 3
             let log = self.log
             renderer.onFrameCompleted = { log.add(gpu: $0) }
             window.contentView = view
@@ -175,7 +184,7 @@ func trees(_ c: CGContext, fill: CGColor) {
             "| \(name) | \(target) | \(value) | \(pass ? "PASS" : "FAIL") |"
         }
         let report = [
-            "Renderer spike — \(views.count) screen(s): \(pixels); 6 layers, 2 masked effects, 2000 particles, \(Int(playSeconds)) s",
+            "Renderer spike — \(views.count) screen(s): \(pixels); 7 layers (one blurred), 2 masked effects, a glow, a grade, 2000 petals, \(Int(playSeconds)) s",
             "",
             "| Check | Target | Measured | Result |",
             "|---|---|---|---|",
