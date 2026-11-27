@@ -249,9 +249,14 @@ private struct EmptyBill: View {
             Text("Drop a video, a web folder or an .ikigai file here, or import one.")
                 .font(.system(size: 14))
                 .foregroundStyle(Theme.screen2)
-            Button("Import…", action: importFiles)
-                .buttonStyle(PrimaryButtonStyle(large: true))
-                .padding(.top, 6)
+            HStack(spacing: 10) {
+                Button("Import…", action: importFiles)
+                    .buttonStyle(PrimaryButtonStyle(large: true))
+                Button("Add Starter Pack") { Task { await AppModel.shared.installStarterPack() } }
+                    .buttonStyle(SecondaryButtonStyle())
+                    .disabled(AppModel.shared.installingStarterPack)
+            }
+            .padding(.top, 6)
         }
         .padding(44)
         .frame(maxWidth: 560)
