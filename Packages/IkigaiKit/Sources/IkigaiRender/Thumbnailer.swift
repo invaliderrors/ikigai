@@ -30,10 +30,16 @@ import UniformTypeIdentifiers
     /// Renders the page off-screen in the same sandbox the desktop uses, lets it draw for a second, and snapshots it.
     private static func makeWebPreview(for wallpaper: InstalledWallpaper) async throws {
         let host = WebHost(page: wallpaper.entryURL, package: wallpaper.packageURL)
-        let frame = CGRect(x: -30_000, y: -30_000, width: 1440, height: 900)  // off every screen
-        let window = NSWindow(contentRect: frame, styleMask: .borderless, backing: .buffered, defer: false)
+        // On screen but practically invisible: an off-screen or covered window counts as occluded, and WebKit
+        // then stops requestAnimationFrame, so animated pages would snapshot as their empty background.
+        let origin = NSScreen.main?.frame.origin ?? .zero
+        let window = NSWindow(contentRect: CGRect(origin: origin, size: CGSize(width: 1440, height: 900)),
+                              styleMask: .borderless, backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
         window.ignoresMouseEvents = true
+        window.alphaValue = 0.01
+        window.level = .floating
+        window.collectionBehavior = [.canJoinAllSpaces, .transient, .ignoresCycle]
         window.contentView = host.view
         window.orderFrontRegardless()
         defer { window.orderOut(nil) }
