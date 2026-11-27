@@ -261,6 +261,8 @@ import Observation
             "“\(item)” is larger than \(ByteCountFormatter.string(fromByteCount: limit, countStyle: .file)), the most Ikigai imports."
         case .notAVideo?:
             "“\(item)” isn't a video Ikigai can play. Try an MP4 or MOV file."
+        case .notAnImage?:
+            "“\(item)” isn't an image. Scenes are made from PNG, JPEG, HEIC or other picture files."
         case .missingIndexHTML?:
             "“\(item)” has no index.html at its top level, so it can't be a web wallpaper."
         case .containsSymbolicLink(let link)?:

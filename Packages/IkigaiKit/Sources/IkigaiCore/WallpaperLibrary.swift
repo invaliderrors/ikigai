@@ -23,6 +23,7 @@ public struct WallpaperLibrary: Sendable {
     public enum ImportError: Error, Equatable {
         case tooLarge(bytes: Int64, limit: Int64)
         case notAVideo(String)
+        case notAnImage(String)
         case missingIndexHTML
         case containsSymbolicLink(String)
         case unreadableArchive
@@ -251,6 +252,66 @@ public struct WallpaperLibrary: Sendable {
             throw ImportError.invalidPackage
         }
         return installed
+    }
+
+    // MARK: Creating scenes (the Studio)
+
+    public static let creationsTag = "My Creations"
+
+    /// A new scene with one layer: the picture the creator started from.
+    public func createScene(from image: URL) throws -> InstalledWallpaper {
+        try checkImage(image)
+        let scene = SceneDocument(layers: [SceneDocument.Layer(image: image.lastPathComponent)])
+        let installed = try install(title: image.deletingPathExtension().lastPathComponent, kind: .scene,
+                                    entry: "assets/scene.json") { assets in
+            try FileManager.default.copyItem(at: image, to: assets.appending(path: image.lastPathComponent))
+            try Self.encode(scene).write(to: assets.appending(path: "scene.json"), options: .atomic)
+        }
+        return try update(installed, title: installed.manifest.title, tags: [Self.creationsTag])
+    }
+
+    /// Copies an image into a scene's folder and returns the name to use in scene.json.
+    public func addImage(_ image: URL, to wallpaper: InstalledWallpaper) throws -> String {
+        try checkImage(image)
+        let folder = wallpaper.entryURL.deletingLastPathComponent()
+        let stem = image.deletingPathExtension().lastPathComponent, ext = image.pathExtension
+        var name = image.lastPathComponent, n = 1
+        while FileManager.default.fileExists(atPath: folder.appending(path: name).path) {
+            n += 1
+            name = "\(stem)-\(n).\(ext)"
+        }
+        try FileManager.default.copyItem(at: image, to: folder.appending(path: name))
+        return name
+    }
+
+    /// Saves an edited scene. It's written beside the old file and validated first, so an edit that
+    /// names a missing image can never replace a working scene.
+    public func saveScene(_ scene: SceneDocument, to wallpaper: InstalledWallpaper) throws {
+        var scene = scene
+        scene.version = SceneDocument.currentVersion
+        let entry = wallpaper.entryURL
+        let draft = entry.deletingLastPathComponent().appending(path: ".scene-draft.json")
+        defer { try? FileManager.default.removeItem(at: draft) }
+        try Self.encode(scene).write(to: draft, options: .atomic)
+        _ = try SceneDocument.load(entry: draft, package: wallpaper.packageURL)
+        _ = try FileManager.default.replaceItemAt(entry, withItemAt: draft)
+    }
+
+    public func scene(of wallpaper: InstalledWallpaper) throws -> SceneDocument {
+        try JSONDecoder().decode(SceneDocument.self, from: Data(contentsOf: wallpaper.entryURL))
+    }
+
+    private static func encode(_ scene: SceneDocument) throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        return try encoder.encode(scene)
+    }
+
+    private func checkImage(_ url: URL) throws {
+        guard let type = UTType(filenameExtension: url.pathExtension), type.conforms(to: .image) else {
+            throw ImportError.notAnImage(url.lastPathComponent)
+        }
+        try checkSize(of: url)
     }
 
     public func trash(_ wallpaper: InstalledWallpaper) throws {
