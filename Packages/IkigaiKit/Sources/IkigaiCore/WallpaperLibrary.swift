@@ -196,6 +196,36 @@ public struct WallpaperLibrary: Sendable {
         if let refused { throw ImportError.unsafeArchiveEntry(refused) }
     }
 
+    // MARK: Editing
+
+    public static let maxTitleLength = 80
+    public static let maxTags = 12
+    public static let maxTagLength = 32
+
+    /// Renames and retags a wallpaper by rewriting its manifest atomically. Titles are trimmed and
+    /// capped; tags are trimmed, capped, and deduplicated ignoring case, keeping the first spelling.
+    @discardableResult
+    public func update(_ wallpaper: InstalledWallpaper, title: String, tags: [String]) throws -> InstalledWallpaper {
+        var manifest = wallpaper.manifest
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        manifest.title = trimmed.isEmpty ? manifest.title : String(trimmed.prefix(Self.maxTitleLength))
+        manifest.tags = Self.normalizedTags(tags)
+        try manifest.encoded().write(to: wallpaper.packageURL.appending(path: Self.manifestName), options: .atomic)
+        return InstalledWallpaper(manifest: manifest, packageURL: wallpaper.packageURL)
+    }
+
+    public static func normalizedTags(_ tags: [String]) -> [String] {
+        var seen: Set<String> = []
+        var result: [String] = []
+        for tag in tags {
+            let clean = String(tag.trimmingCharacters(in: .whitespacesAndNewlines).prefix(maxTagLength))
+            guard !clean.isEmpty, seen.insert(clean.lowercased()).inserted else { continue }
+            result.append(clean)
+            if result.count == maxTags { break }
+        }
+        return result
+    }
+
     public func trash(_ wallpaper: InstalledWallpaper) throws {
         try FileManager.default.trashItem(at: wallpaper.packageURL, resultingItemURL: nil)
     }
