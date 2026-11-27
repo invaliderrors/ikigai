@@ -62,7 +62,7 @@ private struct PerformanceSettings: View {
                 Toggle("An app is in full screen", isOn: $model.preferences.whenFullScreen)
                 Toggle(isOn: $model.preferences.onBattery) {
                     Text("On battery")
-                    Text("Plug in, or choose Resume in the menu bar, to play again.")
+                    Text("Wallpapers play again when you plug in. Turn this off to play on battery.")
                 }
                 Toggle("Low Power Mode is on", isOn: $model.preferences.inLowPowerMode)
                 LabeledContent {
