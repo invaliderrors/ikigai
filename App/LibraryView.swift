@@ -8,6 +8,7 @@ struct LibraryView: View {
     @State private var selection: UUID?
     @State private var search = ""
     @State private var kind: WallpaperManifest.Kind?
+    @State private var tagFilter: String?
     @State private var choosingFiles = false
     @State private var dropTargeted = false
 
@@ -16,6 +17,7 @@ struct LibraryView: View {
     private var filtered: [InstalledWallpaper] {
         model.wallpapers.filter { wallpaper in
             (kind == nil || wallpaper.manifest.kind == kind)
+                && (tagFilter == nil || wallpaper.manifest.tags.contains { $0.caseInsensitiveCompare(tagFilter!) == .orderedSame })
                 && (search.isEmpty || wallpaper.manifest.title.localizedCaseInsensitiveContains(search)
                     || wallpaper.manifest.tags.contains { $0.localizedCaseInsensitiveContains(search) })
         }
@@ -26,12 +28,23 @@ struct LibraryView: View {
             // Selection is a tungsten tint, not the system accent fill (DESIGN.md: Tint, Not Fill).
             List {
                 Section("Play") {
-                    Label("Library", systemImage: "square.grid.2x2")
-                        .badge(Text("\(model.wallpapers.count)").foregroundStyle(Theme.screen2))
-                        .foregroundStyle(Theme.tungsten)
-                        .listRowBackground(Theme.tungstenTint.clipShape(.rect(cornerRadius: 8)).padding(.horizontal, 10))
-                        .accessibilityAddTraits(.isSelected)
+                    sidebarRow("Library", symbol: "square.grid.2x2", count: model.wallpapers.count, selected: tagFilter == nil) {
+                        tagFilter = nil
+                    }
                 }
+                if !model.allTags.isEmpty {
+                    Section("Tags") {
+                        ForEach(model.allTags, id: \.name) { tag in
+                            sidebarRow(tag.name, symbol: "tag", count: tag.count, selected: tagFilter?.lowercased() == tag.name.lowercased()) {
+                                tagFilter = tag.name
+                            }
+                        }
+                    }
+                }
+            }
+            .onChange(of: model.allTags.map(\.name)) { _, names in
+                // The tag being shown was removed from its last wallpaper: go back to everything.
+                if let tagFilter, !names.contains(where: { $0.caseInsensitiveCompare(tagFilter) == .orderedSame }) { self.tagFilter = nil }
             }
             .scrollContentBackground(.hidden)
             .background(Theme.sidebar)
@@ -41,6 +54,7 @@ struct LibraryView: View {
                 .inspector(isPresented: Binding(get: { selected != nil }, set: { if !$0 { selection = nil } })) {
                     if let selected {
                         WallpaperInspector(model: model, wallpaper: selected)
+                            .id(selected.id)  // fresh edit fields for each wallpaper
                             .inspectorColumnWidth(min: 280, ideal: 320, max: 380)
                     }
                 }
@@ -101,7 +115,8 @@ struct LibraryView: View {
                         }
                     }
                     if filtered.isEmpty {
-                        Text("No wallpapers match “\(search)”.").foregroundStyle(Theme.screen2).frame(maxWidth: .infinity)
+                        Text(search.isEmpty ? "No wallpapers here yet." : "No wallpapers match “\(search)”.")
+                            .foregroundStyle(Theme.screen2).frame(maxWidth: .infinity)
                     }
                 }
             }
@@ -120,6 +135,19 @@ struct LibraryView: View {
                     .allowsHitTesting(false)
             }
         }
+    }
+
+    private func sidebarRow(_ title: String, symbol: String, count: Int, selected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: symbol)
+                .badge(Text("\(count)").foregroundStyle(Theme.screen2))
+                .foregroundStyle(selected ? Theme.tungsten : Theme.screen)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .listRowBackground(selected ? Theme.tungstenTint.clipShape(.rect(cornerRadius: 8)).padding(.horizontal, 10) : nil)
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
     private var libraryTitle: some View {
@@ -236,6 +264,45 @@ private struct EmptyBill: View {
 private struct WallpaperInspector: View {
     var model: AppModel
     let wallpaper: InstalledWallpaper
+    @State private var title = ""
+    @State private var newTag = ""
+    @FocusState private var titleFocused: Bool
+
+    private var details: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Details").font(.system(size: 12, weight: .bold)).textCase(.uppercase).tracking(0.7).foregroundStyle(Theme.screen2)
+            TextField("Title", text: $title)
+                .textFieldStyle(.roundedBorder)
+                .focused($titleFocused)
+                .onSubmit(saveTitle)
+                .onChange(of: titleFocused) { _, focused in if !focused { saveTitle() } }
+            if !wallpaper.manifest.tags.isEmpty {
+                FlowLayout(spacing: 6) {
+                    ForEach(wallpaper.manifest.tags, id: \.self) { tag in
+                        TagChip(tag: tag) {
+                            model.update(wallpaper, title: wallpaper.manifest.title, tags: wallpaper.manifest.tags.filter { $0 != tag })
+                        }
+                    }
+                }
+            }
+            TextField("Add tag", text: $newTag)
+                .textFieldStyle(.roundedBorder)
+                .onSubmit(addTags)
+                .help("Separate several tags with commas")
+        }
+        .onAppear { title = wallpaper.manifest.title }
+    }
+
+    private func saveTitle() {
+        model.update(wallpaper, title: title, tags: wallpaper.manifest.tags)
+        if title.trimmingCharacters(in: .whitespaces).isEmpty { title = wallpaper.manifest.title }
+    }
+
+    private func addTags() {
+        let added = newTag.split(separator: ",").map(String.init)
+        model.update(wallpaper, title: wallpaper.manifest.title, tags: wallpaper.manifest.tags + added)
+        newTag = ""
+    }
 
     var body: some View {
         let showing = model.screensShowing(wallpaper)
@@ -253,6 +320,8 @@ private struct WallpaperInspector: View {
                     fact("File", wallpaper.entryURL.lastPathComponent)
                 }
                 .font(.system(size: 12))
+
+                details
 
                 Divider().overlay(Theme.line)
 

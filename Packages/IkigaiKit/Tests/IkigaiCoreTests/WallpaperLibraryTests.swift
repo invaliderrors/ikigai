@@ -51,6 +51,30 @@ struct WallpaperLibraryTests {
         #expect(throws: WallpaperLibrary.ImportError.containsSymbolicLink("secrets")) { try library.importWebFolder(at: folder) }
     }
 
+    // MARK: Editing
+
+    @Test func renameAndRetagPersist() throws {
+        let video = try library.importVideo(at: try file("clip.mov"))
+        let edited = try library.update(video, title: "  Rooftop Dusk 2 ", tags: ["Anime", " anime", "city ", "", "Night"])
+        #expect(edited.manifest.title == "Rooftop Dusk 2")
+        #expect(edited.manifest.tags == ["Anime", "city", "Night"])
+        #expect(library.load().wallpapers == [edited])
+    }
+
+    @Test func blankTitleKeepsTheOldOneAndLimitsHold() throws {
+        let video = try library.importVideo(at: try file("clip.mov"))
+        let edited = try library.update(video, title: "   ", tags: (1...20).map { "tag\($0)" } + [String(repeating: "x", count: 50)])
+        #expect(edited.manifest.title == "clip")
+        #expect(edited.manifest.tags.count == WallpaperLibrary.maxTags)
+        #expect(WallpaperLibrary.normalizedTags([String(repeating: "x", count: 50)]) == [String(repeating: "x", count: 32)])
+    }
+
+    @Test func tagsTravelInsideIkigaiFiles() throws {
+        let video = try library.update(try library.importVideo(at: try file("clip.mov")), title: "Clip", tags: ["lofi"])
+        let copy = try library.importArchive(at: try shared(video))
+        #expect(copy.manifest.tags == ["lofi"])
+    }
+
     // MARK: .ikigai files
 
     func shared(_ wallpaper: InstalledWallpaper) throws -> URL {

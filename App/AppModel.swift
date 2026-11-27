@@ -156,6 +156,25 @@ import Observation
         }
     }
 
+    /// Every tag in the library with how many wallpapers carry it, A–Z (case-insensitive).
+    var allTags: [(name: String, count: Int)] {
+        var counts: [String: (name: String, count: Int)] = [:]
+        for tag in wallpapers.flatMap(\.manifest.tags) {
+            counts[tag.lowercased(), default: (tag, 0)].count += 1
+        }
+        return counts.values.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+
+    func update(_ wallpaper: InstalledWallpaper, title: String, tags: [String]) {
+        guard title != wallpaper.manifest.title || tags != wallpaper.manifest.tags else { return }
+        do {
+            try library.update(wallpaper, title: title, tags: tags)
+            reload()
+        } catch {
+            alert = "“\(wallpaper.manifest.title)” couldn't be changed. \(error.localizedDescription)"
+        }
+    }
+
     func moveToTrash(_ wallpaper: InstalledWallpaper) {
         do {
             try library.trash(wallpaper)
