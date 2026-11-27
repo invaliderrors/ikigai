@@ -23,6 +23,18 @@ public struct ScreenAssignments: Codable, Hashable, Sendable {
         perScreen[screenID] = wallpaper
     }
 
+    /// Turns one screen dark. If it was following the everywhere choice, the other connected screens
+    /// that followed it too are pinned to it first, so they keep playing; screens with their own
+    /// choice, connected or not, are left exactly as they were.
+    public mutating func turnOff(screen screenID: String, connected: [String]) {
+        perScreen[screenID] = nil
+        guard let shared = everywhere else { return }
+        for other in connected where other != screenID && perScreen[other] == nil {
+            perScreen[other] = shared
+        }
+        everywhere = nil
+    }
+
     /// Called when a wallpaper leaves the library, so no screen points at a missing package.
     public mutating func remove(_ wallpaper: UUID) {
         if everywhere == wallpaper { everywhere = nil }

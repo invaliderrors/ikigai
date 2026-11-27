@@ -84,13 +84,7 @@ import Observation
     }
 
     func clear(_ screen: ScreenInfo) {
-        assignments.show(nil, onScreen: screen.id)
-        if assignments.wallpaper(forScreen: screen.id) != nil {
-            // The screen falls back to the everywhere choice; turning it off means stopping everywhere elsewhere too.
-            let others = screens.filter { $0 != screen }.map { ($0, assignments.wallpaper(forScreen: $0.id)) }
-            assignments.showEverywhere(nil)
-            for (other, id) in others { assignments.show(id, onScreen: other.id) }
-        }
+        assignments.turnOff(screen: screen.id, connected: screens.map(\.id))
         apply()
     }
 

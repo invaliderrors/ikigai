@@ -27,6 +27,16 @@ struct ScreenAssignmentsTests {
         #expect(restored.wallpaper(forScreen: "dell-portrait") == alpine)
     }
 
+    @Test func turningOneScreenOffKeepsEveryOtherChoice() {
+        var assignments = ScreenAssignments()
+        assignments.showEverywhere(neon)
+        assignments.show(alpine, onScreen: "unplugged-dell")
+        assignments.turnOff(screen: "built-in", connected: ["built-in", "studio-display"])
+        #expect(assignments.wallpaper(forScreen: "built-in") == nil)
+        #expect(assignments.wallpaper(forScreen: "studio-display") == neon)
+        #expect(assignments.wallpaper(forScreen: "unplugged-dell") == alpine)
+    }
+
     @Test func removedWallpapersLeaveNoDanglingReferences() {
         var assignments = ScreenAssignments()
         assignments.showEverywhere(neon)
