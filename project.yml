@@ -20,7 +20,13 @@ targets:
   Ikigai:
     type: application
     platform: macOS
-    sources: [App]
+    sources:
+      - path: App
+        excludes: [Resources/StarterPack/**]
+      # A folder reference, copied as is: each wallpaper keeps its own folder (and its own index.html).
+      - path: App/Resources/StarterPack
+        type: folder
+        buildPhase: resources
     dependencies:
       - package: IkigaiKit
         product: IkigaiCore
