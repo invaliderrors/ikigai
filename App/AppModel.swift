@@ -1,4 +1,4 @@
-import Foundation
+import AppKit
 import IkigaiCore
 import IkigaiDesktop
 import IkigaiRender
@@ -132,12 +132,26 @@ import Observation
                     _ = try await Task.detached { [library] in
                         // Ask the file system: a dropped folder's URL doesn't always end in a slash.
                         let isFolder = (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
-                        return isFolder ? try library.importWebFolder(at: url) : try library.importVideo(at: url)
+                        if isFolder { return try library.importWebFolder(at: url) }
+                        if url.pathExtension.lowercased() == WallpaperLibrary.packageExtension { return try library.importArchive(at: url) }
+                        return try library.importVideo(at: url)
                     }.value
                     reload()  // also makes its preview
                 } catch {
                     alert = Self.message(for: error, item: url.lastPathComponent)
                 }
+            }
+        }
+    }
+
+    /// Writes a shareable `.ikigai` file. Compressing a large video takes a moment, so it runs off the main thread.
+    func export(_ wallpaper: InstalledWallpaper, to destination: URL) {
+        Task {
+            do {
+                try await Task.detached { [library] in try library.export(wallpaper, to: destination) }.value
+                NSWorkspace.shared.activateFileViewerSelecting([destination])
+            } catch {
+                alert = "“\(wallpaper.manifest.title)” couldn't be exported. \(error.localizedDescription)"
             }
         }
     }
@@ -164,6 +178,14 @@ import Observation
             "“\(item)” has no index.html at its top level, so it can't be a web wallpaper."
         case .containsSymbolicLink(let link)?:
             "“\(item)” contains a link to another place (“\(link)”). Copy the real files into the folder and try again."
+        case .unreadableArchive?:
+            "“\(item)” isn't an Ikigai wallpaper file, or it's damaged."
+        case .unsafeArchiveEntry(let entry)?:
+            "“\(item)” was refused because it contains “\(entry)”, which could reach outside the wallpaper or is too large."
+        case .invalidPackage?:
+            "“\(item)” is missing parts it needs to play."
+        case nil where error is WallpaperManifest.DecodingFailure:
+            "“\(item)” was made with a newer version of Ikigai. Update Ikigai to open it."
         case nil:
             "“\(item)” couldn't be imported. \(error.localizedDescription)"
         }

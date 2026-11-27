@@ -29,6 +29,21 @@ targets:
       - package: IkigaiKit
         product: IkigaiDesktop
     scheme: {}
+    # Merged with the generated Info.plist keys below; the file itself is generated, not committed.
+    info:
+      path: App/Info.plist
+      properties:
+        UTExportedTypeDeclarations:
+          - UTTypeIdentifier: com.invaliderrors.ikigai.wallpaper
+            UTTypeDescription: Ikigai Wallpaper
+            UTTypeConformsTo: [public.data, public.archive]
+            UTTypeTagSpecification:
+              public.filename-extension: [ikigai]
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Ikigai Wallpaper
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Owner
+            LSItemContentTypes: [com.invaliderrors.ikigai.wallpaper]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.invaliderrors.ikigai
