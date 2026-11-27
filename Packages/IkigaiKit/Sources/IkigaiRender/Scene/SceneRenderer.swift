@@ -4,7 +4,7 @@ import MetalKit
 
 /// One image layer of a scene.
 public struct SceneLayer {
-    public enum Effect: Int32 { case none = 0, sway = 1, ripple = 2 }
+    public enum Effect: Int32 { case none = 0, sway = 1, ripple = 2, wave = 3, shake = 4, scroll = 5 }
 
     public var texture: MTLTexture
     /// 0 stays still; 1 moves most with the mouse.

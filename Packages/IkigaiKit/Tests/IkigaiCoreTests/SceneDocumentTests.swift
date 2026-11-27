@@ -31,6 +31,30 @@ struct SceneDocumentTests {
         #expect(library.load().wallpapers.map(\.id) == [scene.id])
     }
 
+    @Test func version2ReadsNewFieldsAndClampsThem() throws {
+        let folder = try sceneFolder("""
+            {"version": 2, "particles": 300, "particleStyle": "embers",
+             "grade": {"brightness": 1.1, "contrast": 9, "saturation": -1},
+             "layers": [{"image": "sky.png", "effect": "scroll", "blur": 0.4, "glow": 3}]}
+            """)
+        let scene = try library.importSceneFolder(at: folder)
+        let resolved = try SceneDocument.load(entry: scene.entryURL, package: scene.packageURL)
+        #expect(resolved.particleStyle == .embers)
+        #expect(resolved.layers[0].effect == .scroll)
+        #expect(resolved.layers[0].blur == 0.4)
+        #expect(resolved.layers[0].glow == 1)
+        #expect(resolved.grade == SceneDocument.Grade(brightness: 1.1, contrast: 2, saturation: 0))
+    }
+
+    @Test func version1FilesReadWithDefaults() throws {
+        let folder = try sceneFolder(#"{"version": 1, "layers": [{"image": "sky.png"}]}"#)
+        let scene = try library.importSceneFolder(at: folder)
+        let resolved = try SceneDocument.load(entry: scene.entryURL, package: scene.packageURL)
+        #expect(resolved.particleStyle == .snow)
+        #expect(resolved.grade == .neutral)
+        #expect(resolved.layers[0].blur == 0 && resolved.layers[0].glow == 0)
+    }
+
     @Test func layerOutsideThePackageIsRefused() throws {
         let folder = try sceneFolder(#"{"version": 1, "layers": [{"image": "../../../../etc/hosts"}]}"#)
         #expect(throws: WallpaperLibrary.ImportError.invalidPackage) { try library.importSceneFolder(at: folder) }
@@ -42,8 +66,9 @@ struct SceneDocumentTests {
         let package = entry.deletingLastPathComponent()
         #expect(throws: SceneDocument.Failure.missingFile("nope.png")) { try SceneDocument.load(entry: entry, package: package) }
 
-        try Data(#"{"version": 2, "layers": [{"image": "sky.png"}]}"#.utf8).write(to: entry)
-        #expect(throws: SceneDocument.Failure.newerVersion(found: 2, supported: 1)) { try SceneDocument.load(entry: entry, package: package) }
+        // A newer file may use effects this build doesn't know; it must say "newer", not "unreadable".
+        try Data(#"{"version": 3, "layers": [{"image": "sky.png", "effect": "warp-drive"}]}"#.utf8).write(to: entry)
+        #expect(throws: SceneDocument.Failure.newerVersion(found: 3, supported: 2)) { try SceneDocument.load(entry: entry, package: package) }
 
         try Data(#"{"version": 1, "layers": []}"#.utf8).write(to: entry)
         #expect(throws: SceneDocument.Failure.noLayers) { try SceneDocument.load(entry: entry, package: package) }

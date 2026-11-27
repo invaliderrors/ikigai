@@ -52,6 +52,9 @@ extension SceneLayer.Effect {
         case .none: self = .none
         case .sway: self = .sway
         case .ripple: self = .ripple
+        case .wave: self = .wave
+        case .shake: self = .shake
+        case .scroll: self = .scroll
         }
     }
 }
