@@ -1,0 +1,18 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v5
+      - name: Engine tests
+        run: swift test --package-path Packages/IkigaiKit
+      - name: Generate Xcode project
+        run: brew install xcodegen && xcodegen generate
+      - name: Build app
+        run: xcodebuild -project Ikigai.xcodeproj -scheme Ikigai -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build
