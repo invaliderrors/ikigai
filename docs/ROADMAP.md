@@ -36,7 +36,8 @@ Each phase ends with something usable. Later phases may be reordered; earlier on
 
 ## Phase 3 — Studio: *"a minute from picture to wallpaper"*
 
-- Canvas with direct manipulation, layer list, inspector, undo/redo
+- [x] Studio: layer list, live canvas, inspector, autosave, Live on Desktop (first slice)
+- Canvas with direct manipulation, undo/redo
 - Mask brush, effect browser with live thumbnails
 - One-image wizard: depth estimation (Core ML), subject lifting (Vision), automatic parallax layers
 - Templates and starter scenes

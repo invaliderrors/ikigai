@@ -131,10 +131,14 @@ public struct SceneDocument: Codable, Hashable, Sendable {
         guard let header = try? JSONDecoder().decode(Header.self, from: data) else { throw Failure.unreadable }
         guard header.version <= currentVersion else { throw Failure.newerVersion(found: header.version, supported: currentVersion) }
         guard let scene = try? JSONDecoder().decode(SceneDocument.self, from: data) else { throw Failure.unreadable }
+        return try resolve(scene, folder: entry.deletingLastPathComponent(), package: package)
+    }
+
+    /// Validates a scene held in memory (the Studio's working copy) with the same rules as `load`.
+    /// Paths are relative to `folder`, which must be inside `package`.
+    public static func resolve(_ scene: SceneDocument, folder: URL, package: URL) throws -> Resolved {
         guard !scene.layers.isEmpty else { throw Failure.noLayers }
         guard scene.layers.count <= maxLayers else { throw Failure.tooManyLayers(scene.layers.count) }
-
-        let folder = entry.deletingLastPathComponent()
         let root = package.standardizedFileURL.path + "/"
         func file(_ path: String) throws -> URL {
             // Relative to the scene's folder, but never outside the package.

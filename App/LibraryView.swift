@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 
 struct LibraryView: View {
     @Bindable private var model = AppModel.shared
+    @Environment(\.openWindow) private var openWindow
     @State private var selection: UUID?
     @State private var search = ""
     @State private var kind: WallpaperManifest.Kind?
@@ -77,8 +78,15 @@ struct LibraryView: View {
                 .pickerStyle(.segmented)
             }
             ToolbarItem(placement: .primaryAction) {
-                Button("Import", systemImage: "plus") { choosingFiles = true }
-                    .help("Import a video or a web folder")
+                Menu {
+                    Button("Import…") { choosingFiles = true }
+                    Button("New Scene from Image…") { newScene() }
+                } label: {
+                    Label("New", systemImage: "plus")
+                } primaryAction: {
+                    choosingFiles = true
+                }
+                .help("Import a wallpaper, or start a scene from a picture")
             }
         }
         .searchable(text: $search, placement: .toolbar, prompt: "Search wallpapers")
@@ -91,9 +99,8 @@ struct LibraryView: View {
             Text(model.alert ?? "")
         }
         .preferredColorScheme(.dark)
-        // A Dock icon and full menus while the Library is open; menu bar only otherwise.
-        .onAppear { NSApp.setActivationPolicy(.regular) }
-        .onDisappear { NSApp.setActivationPolicy(.accessory) }
+        .onAppear { model.windowOpened() }
+        .onDisappear { model.windowClosed() }
     }
 
     private var content: some View {
@@ -149,6 +156,16 @@ struct LibraryView: View {
         .buttonStyle(.plain)
         .listRowBackground(selected ? Theme.tungstenTint.clipShape(.rect(cornerRadius: 8)).padding(.horizontal, 10) : nil)
         .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+
+    /// Starts a scene from one picture and opens it in the Studio.
+    private func newScene() {
+        guard let image = pickImages(multiple: false)?.first else { return }
+        Task {
+            guard let id = await model.createScene(from: image) else { return }
+            selection = id
+            openWindow(id: WindowID.studio, value: id)
+        }
     }
 
     private var libraryTitle: some View {
@@ -270,6 +287,7 @@ private struct EmptyBill: View {
 private struct WallpaperInspector: View {
     var model: AppModel
     let wallpaper: InstalledWallpaper
+    @Environment(\.openWindow) private var openWindow
     @State private var title = ""
     @State private var newTag = ""
     @FocusState private var titleFocused: Bool
@@ -354,6 +372,11 @@ private struct WallpaperInspector: View {
                     .buttonStyle(PrimaryButtonStyle(large: true))
                     .frame(maxWidth: .infinity)
 
+                if wallpaper.manifest.kind == .scene {
+                    Button("Edit in Studio", systemImage: "square.3.layers.3d") { openWindow(id: WindowID.studio, value: wallpaper.id) }
+                        .buttonStyle(SecondaryButtonStyle())
+                        .frame(maxWidth: .infinity)
+                }
                 HStack(spacing: 8) {
                     Button("Export…") { exportWithSavePanel(wallpaper, model: model) }
                         .help("Save a .ikigai file to share this wallpaper")
