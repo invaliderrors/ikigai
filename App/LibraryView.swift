@@ -70,6 +70,7 @@ struct LibraryView: View {
             ToolbarItem(placement: .principal) {
                 Picker("Type", selection: $kind) {
                     Text("All").tag(WallpaperManifest.Kind?.none)
+                    Text("Scenes").tag(WallpaperManifest.Kind?.some(.scene))
                     Text("Videos").tag(WallpaperManifest.Kind?.some(.video))
                     Text("Web").tag(WallpaperManifest.Kind?.some(.web))
                 }

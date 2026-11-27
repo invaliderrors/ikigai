@@ -228,6 +228,13 @@ public struct WallpaperLibrary: Sendable {
         return result
     }
 
+    /// A folder is a scene when it has a `scene.json`, otherwise a web wallpaper.
+    public func importFolder(at folder: URL) throws -> InstalledWallpaper {
+        FileManager.default.fileExists(atPath: folder.appending(path: "scene.json").path)
+            ? try importSceneFolder(at: folder)
+            : try importWebFolder(at: folder)
+    }
+
     /// A scene is a folder with a `scene.json` and the images it names; everything in it is copied.
     public func importSceneFolder(at folder: URL) throws -> InstalledWallpaper {
         guard FileManager.default.fileExists(atPath: folder.appending(path: "scene.json").path) else {
