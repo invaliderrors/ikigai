@@ -1,6 +1,22 @@
 import IkigaiCore
 import IkigaiDesktop
 import SwiftUI
+import UniformTypeIdentifiers
+
+extension UTType {
+    /// A shareable `.ikigai` file, declared in project.yml.
+    static let ikigaiWallpaper = UTType(exportedAs: "com.invaliderrors.ikigai.wallpaper")
+}
+
+/// Asks where to save a wallpaper's `.ikigai` file, then exports it.
+@MainActor func exportWithSavePanel(_ wallpaper: InstalledWallpaper, model: AppModel) {
+    let panel = NSSavePanel()
+    panel.allowedContentTypes = [.ikigaiWallpaper]
+    panel.nameFieldStringValue = "\(wallpaper.manifest.title).\(WallpaperLibrary.packageExtension)"
+    panel.message = "Anyone with Ikigai can open this file to add the wallpaper to their library."
+    guard panel.runModal() == .OK, let url = panel.url else { return }
+    model.export(wallpaper, to: url)
+}
 
 // MARK: Buttons
 
@@ -77,7 +93,7 @@ struct WallpaperImage: View {
             }
         }
         .clipped()
-        .task(id: wallpaper?.id) {
+        .task(id: "\(wallpaper?.id.uuidString ?? "")-\(AppModel.shared.previewRevision)") {
             image = wallpaper.flatMap { NSImage(contentsOf: $0.previewURL) }
         }
     }

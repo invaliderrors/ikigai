@@ -15,7 +15,7 @@ A module is added when its phase starts, not before.
 
 ## Wallpaper package (`.ikigai`)
 
-A folder (a macOS document package) zipped for sharing:
+A folder in the library; shared as one `.ikigai` file, the folder as an LZFSE-compressed Apple Archive:
 
 ```
 Sunset.ikigai/
@@ -25,6 +25,7 @@ Sunset.ikigai/
 ```
 
 Rules:
+- Importing a `.ikigai` file checks every entry before it's written (no absolute or `..` paths, plain files and folders only, a running size cap) and gives the wallpaper a fresh id.
 - `formatVersion` is an integer. Ikigai refuses to open versions newer than it understands and migrates older ones.
 - Every path in a manifest is relative and must resolve inside the package (`PackagePath.resolve`). Packages come from strangers.
 - The library lives in `~/Library/Application Support/Ikigai/Library/`. Settings live in `UserDefaults`.

@@ -1,4 +1,6 @@
+import AppleArchive
 import Foundation
+import System
 import UniformTypeIdentifiers
 
 /// A wallpaper package that loaded and validated.
@@ -23,6 +25,10 @@ public struct WallpaperLibrary: Sendable {
         case notAVideo(String)
         case missingIndexHTML
         case containsSymbolicLink(String)
+        case unreadableArchive
+        /// An entry that could escape the package or isn't a plain file or folder.
+        case unsafeArchiveEntry(String)
+        case invalidPackage
     }
 
     public struct LoadResult: Sendable {
@@ -103,6 +109,91 @@ public struct WallpaperLibrary: Sendable {
                 try FileManager.default.copyItem(at: item, to: assets.appending(path: item.lastPathComponent))
             }
         }
+    }
+
+    // MARK: Sharing (.ikigai files)
+
+    /// Type, path, data and permissions only: no owner ids or timestamps from the creator's Mac.
+    /// Built per use: FieldKeySet isn't Sendable, so it can't be a shared static.
+    private static var archiveKeys: ArchiveHeader.FieldKeySet { ArchiveHeader.FieldKeySet("TYP,PAT,DAT,MOD")! }
+
+    /// Writes the package as one LZFSE-compressed Apple Archive, the shareable `.ikigai` file.
+    public func export(_ wallpaper: InstalledWallpaper, to destination: URL) throws {
+        guard let file = ArchiveByteStream.fileStream(path: FilePath(destination.path), mode: .writeOnly,
+                                                      options: [.create, .truncate], permissions: [.ownerReadWrite, .groupRead, .otherRead]),
+              let compressed = ArchiveByteStream.compressionStream(using: .lzfse, writingTo: file),
+              let encoder = ArchiveStream.encodeStream(writingTo: compressed)
+        else { throw CocoaError(.fileWriteUnknown) }
+        do {
+            try encoder.writeDirectoryContents(archiveFrom: FilePath(wallpaper.packageURL.path), keySet: Self.archiveKeys)
+            // Closing flushes the compressor; a failure here means a truncated file, so it must throw.
+            try encoder.close()
+            try compressed.close()
+            try file.close()
+        } catch {
+            try? encoder.close(); try? compressed.close(); try? file.close()
+            try? FileManager.default.removeItem(at: destination)
+            throw error
+        }
+    }
+
+    /// Installs a shared `.ikigai` file. It comes from a stranger, so every entry is checked before it's
+    /// written, and the wallpaper gets a fresh id so it can't overwrite or impersonate one already installed.
+    public func importArchive(at source: URL) throws -> InstalledWallpaper {
+        try checkSize(of: source)
+        let staging = root.appending(path: ".import-\(UUID().uuidString)", directoryHint: .isDirectory)
+        do {
+            try FileManager.default.createDirectory(at: staging, withIntermediateDirectories: true)
+            try extract(source, into: staging)
+            try checkSize(of: staging)
+            let manifestURL = staging.appending(path: Self.manifestName)
+            guard let data = try? Data(contentsOf: manifestURL) else { throw ImportError.invalidPackage }
+            var manifest = try WallpaperManifest.decode(from: data)
+            manifest.id = UUID()
+            try manifest.encoded().write(to: manifestURL, options: .atomic)
+            let destination = packageURL(for: manifest.id)
+            try FileManager.default.moveItem(at: staging, to: destination)
+            guard let installed = Self.validated(packageAt: destination) else {
+                try? FileManager.default.removeItem(at: destination)
+                throw ImportError.invalidPackage
+            }
+            return installed
+        } catch {
+            try? FileManager.default.removeItem(at: staging)
+            throw error
+        }
+    }
+
+    private func extract(_ source: URL, into staging: URL) throws {
+        let limit = UInt64(importLimit)
+        var total: UInt64 = 0
+        var refused: String?
+        // Runs before each entry is written. It belongs to the extract stream: a filter passed to
+        // `process` never sees extractBegin. One thread, so the running total isn't shared.
+        let filter: ArchiveHeader.EntryFilter = { message, path, data in
+            guard message == .extractBegin else { return .ok }
+            guard case .header(let header)? = data,
+                  header.entryType == .regularFile || header.entryType == .directory,
+                  !path.isAbsolute, !path.components.contains(where: { $0.kind == .parentDirectory })
+            else { refused = path.string; return .cancel }
+            if case .blob(_, let size, _)? = header.field(forKey: ArchiveHeader.FieldKey("DAT")) { total += size }
+            if total > limit { refused = path.string; return .cancel }
+            return .ok
+        }
+        guard let file = ArchiveByteStream.fileStream(path: FilePath(source.path), mode: .readOnly, options: [], permissions: []),
+              let decompressed = ArchiveByteStream.decompressionStream(readingFrom: file),
+              let decoder = ArchiveStream.decodeStream(readingFrom: decompressed),
+              let extractor = ArchiveStream.extractStream(extractingTo: FilePath(staging.path), selectUsing: filter,
+                                                          flags: [.ignoreOperationNotPermitted], threadCount: 1)
+        else { throw ImportError.unreadableArchive }
+        defer { try? extractor.close(); try? decoder.close(); try? decompressed.close(); try? file.close() }
+
+        do {
+            _ = try ArchiveStream.process(readingFrom: decoder, writingTo: extractor)
+        } catch {
+            throw refused.map(ImportError.unsafeArchiveEntry) ?? ImportError.unreadableArchive
+        }
+        if let refused { throw ImportError.unsafeArchiveEntry(refused) }
     }
 
     public func trash(_ wallpaper: InstalledWallpaper) throws {

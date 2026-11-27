@@ -32,6 +32,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         AppModel.shared.start()
     }
 
+    /// Double-clicking an .ikigai file in Finder (or dropping one on the app) adds it to the library.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        AppModel.shared.importItems(urls)
+        AppModel.shared.libraryRequests += 1
+    }
+
     /// Opening Ikigai again (Finder, Spotlight, the Dock) shows the Library, as people expect.
     /// `hasVisibleWindows` is no guide here: the desktop wallpaper windows always count as visible.
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {

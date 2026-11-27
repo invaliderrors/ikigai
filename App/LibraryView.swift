@@ -67,7 +67,7 @@ struct LibraryView: View {
             }
         }
         .searchable(text: $search, placement: .toolbar, prompt: "Search wallpapers")
-        .fileImporter(isPresented: $choosingFiles, allowedContentTypes: [.movie, .folder], allowsMultipleSelection: true) { result in
+        .fileImporter(isPresented: $choosingFiles, allowedContentTypes: [.movie, .folder, .ikigaiWallpaper], allowsMultipleSelection: true) { result in
             if case .success(let urls) = result { model.importItems(urls) }
         }
         .alert("Something went wrong", isPresented: Binding(get: { model.alert != nil }, set: { if !$0 { model.alert = nil } })) {
@@ -161,6 +161,7 @@ private struct WallpaperTile: View {
                     Button("Show on Screen \(model.number(of: screen)) (\(screen.name))") { model.show(wallpaper, on: screen) }
                 }
                 Divider()
+                Button("Export…") { exportWithSavePanel(wallpaper, model: model) }
                 Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([wallpaper.packageURL]) }
                 Button("Move to Trash", role: .destructive) { model.moveToTrash(wallpaper) }
             }
@@ -217,7 +218,7 @@ private struct EmptyBill: View {
                 .font(.system(size: 30, weight: .light))
                 .foregroundStyle(Theme.tungsten)
             Text("Nothing on the bill yet").marquee(32).foregroundStyle(Theme.screen)
-            Text("Drop a video or a web folder here, or import one.")
+            Text("Drop a video, a web folder or an .ikigai file here, or import one.")
                 .font(.system(size: 14))
                 .foregroundStyle(Theme.screen2)
             Button("Import…", action: importFiles)
@@ -279,6 +280,8 @@ private struct WallpaperInspector: View {
                     .frame(maxWidth: .infinity)
 
                 HStack(spacing: 8) {
+                    Button("Export…") { exportWithSavePanel(wallpaper, model: model) }
+                        .help("Save a .ikigai file to share this wallpaper")
                     Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([wallpaper.packageURL]) }
                     Button("Move to Trash") { model.moveToTrash(wallpaper) }
                         .buttonStyle(SecondaryButtonStyle(tint: Theme.stop))

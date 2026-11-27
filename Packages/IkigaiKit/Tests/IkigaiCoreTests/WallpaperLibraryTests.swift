@@ -51,6 +51,59 @@ struct WallpaperLibraryTests {
         #expect(throws: WallpaperLibrary.ImportError.containsSymbolicLink("secrets")) { try library.importWebFolder(at: folder) }
     }
 
+    // MARK: .ikigai files
+
+    func shared(_ wallpaper: InstalledWallpaper) throws -> URL {
+        let url = sandbox.appending(path: "shared/\(wallpaper.manifest.title).ikigai")
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try library.export(wallpaper, to: url)
+        return url
+    }
+
+    @Test func exportedWallpaperImportsAsANewCopy() throws {
+        let original = try library.importVideo(at: try file("Ocean Swell.mov", bytes: 4096))
+        let copy = try library.importArchive(at: try shared(original))
+        #expect(copy.id != original.id)
+        #expect(copy.manifest.title == "Ocean Swell")
+        #expect(copy.manifest.entry == original.manifest.entry)
+        #expect(try Data(contentsOf: copy.entryURL) == Data(contentsOf: original.entryURL))
+        #expect(Set(library.load().wallpapers.map(\.id)) == [original.id, copy.id])
+    }
+
+    @Test func archiveFromANewerIkigaiIsRefused() throws {
+        let original = try library.importVideo(at: try file("future.mov"))
+        var manifest = original.manifest
+        manifest.formatVersion = WallpaperManifest.currentFormatVersion + 1
+        try manifest.encoded().write(to: original.packageURL.appending(path: WallpaperLibrary.manifestName))
+        #expect(throws: WallpaperManifest.DecodingFailure.self) { try library.importArchive(at: try shared(original)) }
+    }
+
+    @Test func archiveWithASymlinkIsRefusedAndLeavesNothing() throws {
+        let original = try library.importVideo(at: try file("linked.mov"))
+        try FileManager.default.createSymbolicLink(at: original.packageURL.appending(path: "assets/escape"),
+                                                   withDestinationURL: URL(filePath: "/etc/passwd"))
+        let archive = try shared(original)
+        try library.trash(original)
+        #expect(throws: WallpaperLibrary.ImportError.unsafeArchiveEntry("assets/escape")) { try library.importArchive(at: archive) }
+        let leftovers = (try? FileManager.default.contentsOfDirectory(atPath: library.root.path)) ?? []
+        #expect(leftovers.isEmpty)
+    }
+
+    @Test func archiveThatExpandsPastTheCapIsRefused() throws {
+        // 2 MB of zeros compresses to almost nothing, so only the running total during extraction catches it.
+        let roomy = WallpaperLibrary(root: library.root, importLimit: 10_000_000)
+        let big = try roomy.importVideo(at: try file("zeros.mov", bytes: 2_000_000))
+        let archive = try shared(big)
+        try roomy.trash(big)
+        let archiveSize = try FileManager.default.attributesOfItem(atPath: archive.path)[.size] as? Int ?? .max
+        #expect(archiveSize < 1_000_000)
+        #expect(throws: WallpaperLibrary.ImportError.unsafeArchiveEntry("assets/zeros.mov")) { try library.importArchive(at: archive) }
+    }
+
+    @Test func garbageIsNotAnArchive() throws {
+        #expect(throws: WallpaperLibrary.ImportError.unreadableArchive) { try library.importArchive(at: try file("noise.ikigai", bytes: 512)) }
+    }
+
     @Test func entryLinkingOutOfThePackageIsSkipped() throws {
         let video = try library.importVideo(at: try file("clip.mov"))
         try FileManager.default.removeItem(at: video.entryURL)
