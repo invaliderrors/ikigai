@@ -13,6 +13,7 @@ enum SceneShaders {
     };
 
     struct LayerUniforms {
+        float4 bounds;     // visible part of the image: minU, minV, maxU, maxV (origin top-left)
         float2 parallax;   // smoothed mouse, -1...1
         float time;
         float depth;       // 0 = still, 1 = moves most
@@ -29,12 +30,13 @@ enum SceneShaders {
 
     constexpr sampler linearClamp(filter::linear, address::clamp_to_edge);
 
-    // A full-screen quad from four vertex ids, enlarged by overscan and shifted by parallax.
+    // A quad covering only the layer's visible part, enlarged by overscan and shifted by parallax.
     vertex VOut layer_vertex(uint vid [[vertex_id]], constant LayerUniforms &u [[buffer(0)]]) {
-        float2 corner = float2((vid & 1) ? 1.0 : -1.0, (vid & 2) ? -1.0 : 1.0);
+        float2 uv = float2((vid & 1) ? u.bounds.z : u.bounds.x, (vid & 2) ? u.bounds.w : u.bounds.y);
+        float2 clip = float2(uv.x * 2.0 - 1.0, 1.0 - uv.y * 2.0);
         VOut out;
-        out.position = float4(corner * u.overscan - u.parallax * u.depth * 0.03, 0.0, 1.0);
-        out.uv = float2(corner.x * 0.5 + 0.5, 0.5 - corner.y * 0.5);
+        out.position = float4(clip * u.overscan - u.parallax * u.depth * 0.03, 0.0, 1.0);
+        out.uv = uv;
         out.alpha = 1.0;
         return out;
     }
@@ -43,6 +45,7 @@ enum SceneShaders {
     fragment float4 layer_fragment(VOut in [[stage_in]], constant LayerUniforms &u [[buffer(0)]],
                                    texture2d<float> image [[texture(0)]], texture2d<float> mask [[texture(1)]]) {
         float2 uv = in.uv;
+        if (u.effect == 0) { return image.sample(linearClamp, uv); }  // no mask read for plain layers
         float m = mask.sample(linearClamp, uv).r;
         if (u.effect == 1) {        // sway: stronger toward the top, like branches over a fixed trunk
             uv.x += sin(uv.y * 14.0 + u.time * 1.3) * 0.006 * m * (1.0 - uv.y);

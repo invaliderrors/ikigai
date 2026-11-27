@@ -12,12 +12,36 @@ public struct SceneLayer {
     public var effect: Effect
     /// Red channel scales the effect per pixel; nil means everywhere.
     public var mask: MTLTexture?
+    /// The part of the image (in 0...1 texture coordinates, origin top-left) that has visible pixels.
+    /// Only this rectangle is drawn, so a mostly transparent layer costs only what it covers.
+    public var bounds: CGRect
 
-    public init(texture: MTLTexture, depth: Float, effect: Effect = .none, mask: MTLTexture? = nil) {
+    public init(texture: MTLTexture, depth: Float, effect: Effect = .none, mask: MTLTexture? = nil,
+                bounds: CGRect = CGRect(x: 0, y: 0, width: 1, height: 1)) {
         self.texture = texture
         self.depth = depth
         self.effect = effect
         self.mask = mask
+        self.bounds = bounds
+    }
+
+    /// The rectangle of an image with any visible pixels, padded so effects that move pixels
+    /// (sway, ripple) aren't clipped. Measured once at load on a small copy of the alpha channel.
+    public static func visibleBounds(of image: CGImage, padding: CGFloat = 0.02) -> CGRect {
+        let (w, h) = (256, 160)
+        guard let context = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: w,
+                                      space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.alphaOnly.rawValue),
+              let data = context.data?.assumingMemoryBound(to: UInt8.self)
+        else { return CGRect(x: 0, y: 0, width: 1, height: 1) }
+        context.draw(image, in: CGRect(x: 0, y: 0, width: w, height: h))
+        var (minX, minY, maxX, maxY) = (w, h, -1, -1)
+        for y in 0..<h { for x in 0..<w where data[y * w + x] > 2 {  // memory rows run top to bottom
+            minX = min(minX, x); maxX = max(maxX, x); minY = min(minY, y); maxY = max(maxY, y)
+        } }
+        guard maxX >= 0 else { return .zero }
+        let rect = CGRect(x: CGFloat(minX) / CGFloat(w), y: CGFloat(minY) / CGFloat(h),
+                          width: CGFloat(maxX - minX + 1) / CGFloat(w), height: CGFloat(maxY - minY + 1) / CGFloat(h))
+        return rect.insetBy(dx: -padding, dy: -padding).intersection(CGRect(x: 0, y: 0, width: 1, height: 1))
     }
 }
 
@@ -38,7 +62,7 @@ public struct SceneLayer {
     private var parallax = SIMD2<Float>(0, 0)
 
     private struct LayerUniforms {
-        var parallax: SIMD2<Float>, time: Float, depth: Float, overscan: Float, effect: Int32
+        var bounds: SIMD4<Float>, parallax: SIMD2<Float>, time: Float, depth: Float, overscan: Float, effect: Int32
     }
     private struct ParticleUniforms {
         var parallax: SIMD2<Float>, time: Float, aspect: Float, size: Float
@@ -96,8 +120,10 @@ public struct SceneLayer {
         let time = Float(CACurrentMediaTime() - start)
 
         encoder.setRenderPipelineState(pipeline)
-        for layer in layers {
-            var uniforms = LayerUniforms(parallax: parallax, time: time, depth: layer.depth,
+        for layer in layers where !layer.bounds.isEmpty {
+            let b = layer.bounds
+            var uniforms = LayerUniforms(bounds: SIMD4(Float(b.minX), Float(b.minY), Float(b.maxX), Float(b.maxY)),
+                                         parallax: parallax, time: time, depth: layer.depth,
                                          overscan: 1 + 0.03 * layer.depth, effect: layer.effect.rawValue)
             encoder.setVertexBytes(&uniforms, length: MemoryLayout<LayerUniforms>.stride, index: 0)
             encoder.setFragmentBytes(&uniforms, length: MemoryLayout<LayerUniforms>.stride, index: 0)

@@ -74,6 +74,10 @@ func trees(_ c: CGContext, fill: CGColor) {
 @MainActor func makeScene(device: MTLDevice) throws -> [SceneLayer] {
     let loader = MTKTextureLoader(device: device)
     func texture(_ image: CGImage) throws -> MTLTexture { try loader.newTexture(cgImage: image, options: [.SRGB: false]) }
+    func layer(_ image: CGImage, depth: Float, effect: SceneLayer.Effect = .none, mask: CGImage? = nil) throws -> SceneLayer {
+        SceneLayer(texture: try texture(image), depth: depth, effect: effect, mask: try mask.map(texture),
+                   bounds: SceneLayer.visibleBounds(of: image))
+    }
 
     let sky = image { c in
         c.drawLinearGradient(CGGradient(colorsSpace: nil, colors: [color(0xF4B26C), color(0xA5607E), color(0x1B2350)] as CFArray, locations: [0, 0.45, 1])!,
@@ -92,14 +96,17 @@ func trees(_ c: CGContext, fill: CGColor) {
     let waterMask = image { c in c.setFillColor(color(0xFFFFFF)); c.fill(CGRect(x: 0, y: 0, width: W, height: 360)) }
     let grass = image { ridge($0, base: 70, amplitude: 60, frequency: 9, fill: color(0x0B0F1E)) }
 
-    return [
-        SceneLayer(texture: try texture(sky), depth: 0),
-        SceneLayer(texture: try texture(far), depth: 0.15),
-        SceneLayer(texture: try texture(hills), depth: 0.3),
-        SceneLayer(texture: try texture(forest), depth: 0.5, effect: .sway, mask: try texture(forestMask)),
-        SceneLayer(texture: try texture(water), depth: 0.6, effect: .ripple, mask: try texture(waterMask)),
-        SceneLayer(texture: try texture(grass), depth: 0.9),
+    let layers = [
+        try layer(sky, depth: 0),
+        try layer(far, depth: 0.15),
+        try layer(hills, depth: 0.3),
+        try layer(forest, depth: 0.5, effect: .sway, mask: forestMask),
+        try layer(water, depth: 0.6, effect: .ripple, mask: waterMask),
+        try layer(grass, depth: 0.9),
     ]
+    let covered = layers.map { $0.bounds.width * $0.bounds.height }.reduce(0, +)
+    print(String(format: "Layers cover %.1f screens of pixels (was %d before cropping to visible bounds).", covered, layers.count))
+    return layers
 }
 
 // MARK: Benchmark
