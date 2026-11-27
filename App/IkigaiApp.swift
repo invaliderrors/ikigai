@@ -2,6 +2,9 @@ import SwiftUI
 
 @main
 struct IkigaiApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
+    private let model = AppModel.shared
+
     init() {
         Marquee.registerBundledFont()
     }
@@ -15,6 +18,12 @@ struct IkigaiApp: App {
                 .frame(minWidth: 900, minHeight: 560)
         }
         .defaultLaunchBehavior(.suppressed)
+    }
+}
+
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        AppModel.shared.start()
     }
 }
 
@@ -45,8 +54,4 @@ struct LibraryView: View {
             description: Text("Wallpapers you import or create will appear here.")
         )
     }
-}
-
-#Preview {
-    LibraryView()
 }
