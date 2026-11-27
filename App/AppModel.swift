@@ -110,7 +110,9 @@ import Observation
                 defer { importsInFlight -= 1 }
                 do {
                     let imported = try await Task.detached { [library] in
-                        url.hasDirectoryPath ? try library.importWebFolder(at: url) : try library.importVideo(at: url)
+                        // Ask the file system: a dropped folder's URL doesn't always end in a slash.
+                        let isFolder = (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
+                        return isFolder ? try library.importWebFolder(at: url) : try library.importVideo(at: url)
                     }.value
                     try? await Thumbnailer.makePreview(for: imported)  // a missing preview only costs the still
                     reload()

@@ -72,7 +72,9 @@ public struct WallpaperLibrary: Sendable {
               let manifest = try? WallpaperManifest.decode(from: data),
               url.deletingPathExtension().lastPathComponent == manifest.id.uuidString,
               let entry = PackagePath.resolve(manifest.entry, in: url),
-              FileManager.default.fileExists(atPath: entry.path)
+              FileManager.default.fileExists(atPath: entry.path),
+              // PackagePath checks the text of the path; a symlink inside the package could still lead out.
+              entry.resolvingSymlinksInPath().path.hasPrefix(url.resolvingSymlinksInPath().path + "/")
         else { return nil }
         return InstalledWallpaper(manifest: manifest, packageURL: url)
     }
@@ -133,7 +135,8 @@ public struct WallpaperLibrary: Sendable {
         func size(_ url: URL) throws -> Int64 {
             let values = try url.resourceValues(forKeys: keys)
             if values.isSymbolicLink == true { throw ImportError.containsSymbolicLink(url.lastPathComponent) }
-            return Int64(values.totalFileAllocatedSize ?? values.fileSize ?? 0)
+            // The larger of the two: a sparse file's allocated size understates what copying it writes.
+            return Int64(max(values.totalFileAllocatedSize ?? 0, values.fileSize ?? 0))
         }
         var total = try size(url)
         if let items = FileManager.default.enumerator(at: url, includingPropertiesForKeys: Array(keys)) {

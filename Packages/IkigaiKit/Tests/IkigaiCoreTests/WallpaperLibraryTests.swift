@@ -51,6 +51,13 @@ struct WallpaperLibraryTests {
         #expect(throws: WallpaperLibrary.ImportError.containsSymbolicLink("secrets")) { try library.importWebFolder(at: folder) }
     }
 
+    @Test func entryLinkingOutOfThePackageIsSkipped() throws {
+        let video = try library.importVideo(at: try file("clip.mov"))
+        try FileManager.default.removeItem(at: video.entryURL)
+        try FileManager.default.createSymbolicLink(at: video.entryURL, withDestinationURL: try file("outside.mov"))
+        #expect(library.load().wallpapers.isEmpty)
+    }
+
     @Test func invalidPackagesAreSkippedNotDeleted() throws {
         let good = try library.importVideo(at: try file("good.mov"))
         // A package whose folder name doesn't match its manifest id.
