@@ -53,11 +53,25 @@ final class DesktopWindow: NSWindow {
                 self.refresh()
             }
         })
-        screens = NSScreen.screens.compactMap(\.info)
+        // Switching Spaces can reveal or hide a full-screen app without changing our windows' occlusion,
+        // and the window list lags the animation, so check again once it settles.
+        tokens.append(NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.activeSpaceDidChangeNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.refresh()
+                Task { [weak self] in
+                    try? await Task.sleep(for: .milliseconds(700))
+                    self?.refresh()
+                }
+            }
+        })
+        screens = ScreenInfo.connected()
     }
 
     isolated deinit {
-        tokens.forEach(NotificationCenter.default.removeObserver)
+        tokens.forEach {
+            NotificationCenter.default.removeObserver($0)
+            NSWorkspace.shared.notificationCenter.removeObserver($0)
+        }
         stages.values.forEach { $0.window.orderOut(nil) }
     }
 
@@ -68,7 +82,7 @@ final class DesktopWindow: NSWindow {
     }
 
     private func sync() {
-        screens = NSScreen.screens.compactMap(\.info)
+        screens = ScreenInfo.connected()
         var next: [String: Stage] = [:]
         for screen in screens {
             guard let wallpaper = wallpaperFor(screen) else { continue }

@@ -10,6 +10,22 @@ public struct ScreenInfo: Identifiable, Hashable, Sendable {
     let displayID: CGDirectDisplayID
 }
 
+extension ScreenInfo {
+    /// Connected screens with ids made unique: identical monitors without serial numbers can share a
+    /// display UUID, and two screens with one id would leave one window unmanaged.
+    static func connected() -> [ScreenInfo] {
+        var seen: Set<String> = []
+        return NSScreen.screens.compactMap(\.info).map { screen in
+            guard !seen.insert(screen.id).inserted else {
+                let unique = "\(screen.id)-\(screen.displayID)"
+                seen.insert(unique)
+                return ScreenInfo(id: unique, name: screen.name, frame: screen.frame, isBuiltIn: screen.isBuiltIn, displayID: screen.displayID)
+            }
+            return screen
+        }
+    }
+}
+
 extension NSScreen {
     var displayID: CGDirectDisplayID? {
         (deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value

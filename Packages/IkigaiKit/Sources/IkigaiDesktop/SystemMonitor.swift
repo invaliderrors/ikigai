@@ -22,6 +22,9 @@ import IOKit.ps
         observe(workspace, NSWorkspace.screensDidWakeNotification) { $0.asleep = false }
         observe(workspace, NSWorkspace.willSleepNotification) { $0.asleep = true }
         observe(workspace, NSWorkspace.didWakeNotification) { $0.asleep = false }
+        // Fast user switching: another account has the screen, which for us is the same as locked.
+        observe(workspace, NSWorkspace.sessionDidResignActiveNotification) { $0.locked = true }
+        observe(workspace, NSWorkspace.sessionDidBecomeActiveNotification) { $0.locked = false }
         let distributed = DistributedNotificationCenter.default()
         observe(distributed, .init("com.apple.screenIsLocked")) { $0.locked = true }
         observe(distributed, .init("com.apple.screenIsUnlocked")) { $0.locked = false }
