@@ -16,10 +16,11 @@ Each phase ends with something usable. Later phases may be reordered; earlier on
 - [ ] FPS cap (matters once scenes render; moves to Phase 2)
 - [x] Video and web wallpapers (web: own package only, network blocked)
 - [x] Library window: display strip, thumbnail grid, search, type filter, import by drag and drop
-- [ ] Tags, and `.ikigai` import/export
+- [x] `.ikigai` import/export, including opening files from Finder
+- [ ] Tags
 - [x] Menu bar: Now Showing panel, pause and resume, switch wallpaper, open Library
 - [x] Different wallpaper per display, launch at login
-- [ ] Previews for web wallpapers
+- [x] Previews for web wallpapers
 - [ ] Welcome (first run) and the starter pack
 - [ ] Decide on distribution: Developer ID + notarization + Sparkle updates (likely), or the Mac App Store
 
