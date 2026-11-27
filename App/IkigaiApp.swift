@@ -21,6 +21,10 @@ struct IkigaiApp: App {
                 .frame(minWidth: 900, minHeight: 560)
         }
         .defaultLaunchBehavior(.suppressed)
+        WindowGroup("Studio", id: WindowID.studio, for: UUID.self) { $wallpaperID in
+            if let wallpaperID { StudioView(wallpaperID: wallpaperID) }
+        }
+        .defaultSize(width: 1320, height: 820)
         Window("Welcome to Ikigai", id: WindowID.welcome) {
             WelcomeView()
         }
@@ -65,6 +69,11 @@ struct MenuBarIcon: View {
                 openWindow(id: WindowID.library)
                 NSApp.activate()
             }
+            .task(id: model.studioRequest) {
+                guard let id = model.studioRequest else { return }
+                openWindow(id: WindowID.studio, value: id)
+                NSApp.activate()
+            }
             .task(id: model.welcomeRequests) {
                 guard model.welcomeRequests > 0 else { return }
                 openWindow(id: WindowID.welcome)
@@ -76,4 +85,5 @@ struct MenuBarIcon: View {
 enum WindowID {
     static let library = "library"
     static let welcome = "welcome"
+    static let studio = "studio"
 }

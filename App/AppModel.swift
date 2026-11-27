@@ -30,6 +30,8 @@ import Observation
     @ObservationIgnored private var assignmentsBeforePreview: ScreenAssignments?
     private(set) var installingStarterPack = false
     var welcomeRequests = 0
+    /// A scene to open in the Studio; the menu bar icon view opens it.
+    var studioRequest: UUID?
     var preferences: PausePreferences {
         didSet {
             Self.save(preferences, key: "pausePreferences")
@@ -40,7 +42,8 @@ import Observation
         didSet { desktop.userPaused = userPaused }
     }
 
-    @ObservationIgnored private let library = WallpaperLibrary.standard
+    @ObservationIgnored let library = WallpaperLibrary.standard
+    @ObservationIgnored private var openWindows = 0
     @ObservationIgnored private let desktop = DesktopController()
 
     private init() {
@@ -57,6 +60,10 @@ import Observation
             intermissions = desktop.intermissions
         }
         reload()
+        #if DEBUG
+        // Lets UI checks open a scene in the Studio without a click: IKIGAI_OPEN_STUDIO=<wallpaper id>.
+        if let id = ProcessInfo.processInfo.environment["IKIGAI_OPEN_STUDIO"].flatMap(UUID.init) { studioRequest = id; return }
+        #endif
         // A first launch shouldn't leave people hunting for a menu bar icon.
         if !UserDefaults.standard.bool(forKey: Self.welcomeSeenKey) {
             welcomeRequests += 1
@@ -243,6 +250,41 @@ import Observation
         }
     }
 
+    // MARK: Studio
+
+    /// Starts a scene from a picture; returns its id so the Studio can open it.
+    func createScene(from image: URL) async -> UUID? {
+        do {
+            let scene = try await Task.detached { [library] in try library.createScene(from: image) }.value
+            reload()
+            return scene.id
+        } catch {
+            alert = Self.message(for: error, item: image.lastPathComponent)
+            return nil
+        }
+    }
+
+    /// After the Studio saves: fresh preview, and screens showing the scene reload it.
+    func sceneSaved(_ wallpaper: InstalledWallpaper) {
+        try? FileManager.default.removeItem(at: wallpaper.previewURL)
+        previewAttempts.remove(wallpaper.id)
+        desktop.reload(wallpaper.id)
+        reload()
+    }
+
+    // MARK: Windows
+
+    /// A Dock icon and full menus while any window is open; menu bar only when none are.
+    func windowOpened() {
+        openWindows += 1
+        NSApp.setActivationPolicy(.regular)
+    }
+
+    func windowClosed() {
+        openWindows = max(0, openWindows - 1)
+        if openWindows == 0 { NSApp.setActivationPolicy(.accessory) }
+    }
+
     func moveToTrash(_ wallpaper: InstalledWallpaper) {
         do {
             try library.trash(wallpaper)
@@ -255,7 +297,7 @@ import Observation
 
     // MARK: Helpers
 
-    private static func message(for error: Error, item: String) -> String {
+    static func message(for error: Error, item: String) -> String {
         switch error as? WallpaperLibrary.ImportError {
         case .tooLarge(_, let limit)?:
             "“\(item)” is larger than \(ByteCountFormatter.string(fromByteCount: limit, countStyle: .file)), the most Ikigai imports."
