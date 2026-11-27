@@ -1,0 +1,440 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-27T05:41:09+00:00",
+  "title": "Design System: Ikigai",
+  "extensions": {
+    "colorMeta": {
+      "house": {
+        "role": "neutral",
+        "displayName": "House",
+        "canonical": "#17120f",
+        "tonalRamp": [
+          "#221e1b",
+          "#3a312c",
+          "#594940",
+          "#806657",
+          "#a38775",
+          "#bbaaa0",
+          "#d3cac5",
+          "#edeae8"
+        ]
+      },
+      "house-2": {
+        "role": "neutral",
+        "displayName": "House 2",
+        "canonical": "#1f1915",
+        "tonalRamp": [
+          "#221e1b",
+          "#3a322c",
+          "#584a41",
+          "#7e6758",
+          "#a18877",
+          "#baaba1",
+          "#d3cbc5",
+          "#edeae8"
+        ]
+      },
+      "house-3": {
+        "role": "neutral",
+        "displayName": "House 3",
+        "canonical": "#2a221d",
+        "tonalRamp": [
+          "#221e1b",
+          "#39322d",
+          "#574a42",
+          "#7d6759",
+          "#a08878",
+          "#b9aba1",
+          "#d2cbc6",
+          "#edeae9"
+        ]
+      },
+      "house-4": {
+        "role": "neutral",
+        "displayName": "House 4",
+        "canonical": "#362c25",
+        "tonalRamp": [
+          "#221e1b",
+          "#39322d",
+          "#584b41",
+          "#7d6859",
+          "#a18978",
+          "#baaba1",
+          "#d2cbc6",
+          "#edeae9"
+        ]
+      },
+      "booth-black": {
+        "role": "neutral",
+        "displayName": "Booth Black",
+        "canonical": "#0b0908",
+        "tonalRamp": [
+          "#211e1c",
+          "#38312e",
+          "#564943",
+          "#7b665c",
+          "#9d877b",
+          "#b8aaa3",
+          "#d1cac7",
+          "#eceae9"
+        ]
+      },
+      "seat": {
+        "role": "secondary",
+        "displayName": "Seat Red",
+        "canonical": "#3b1519",
+        "tonalRamp": [
+          "#271618",
+          "#432326",
+          "#693036",
+          "#993d46",
+          "#c05964",
+          "#cc8e95",
+          "#dcbcbf",
+          "#f0e5e6"
+        ]
+      },
+      "seat-2": {
+        "role": "secondary",
+        "displayName": "Seat Red Deep",
+        "canonical": "#2a0f12",
+        "tonalRamp": [
+          "#271618",
+          "#432326",
+          "#693037",
+          "#993d47",
+          "#c05964",
+          "#cc8e95",
+          "#dcbcbf",
+          "#f0e5e7"
+        ]
+      },
+      "tungsten": {
+        "role": "primary",
+        "displayName": "Tungsten Amber",
+        "canonical": "#f2b544",
+        "tonalRamp": [
+          "#2e230f",
+          "#513c15",
+          "#805c19",
+          "#c08416",
+          "#eba82e",
+          "#e6be74",
+          "#ead5ae",
+          "#f4ede1"
+        ]
+      },
+      "tungsten-bright": {
+        "role": "primary",
+        "displayName": "Bright Tungsten",
+        "canonical": "#ffd27a",
+        "tonalRamp": [
+          "#30240d",
+          "#553e11",
+          "#886011",
+          "#cd8b09",
+          "#f9af20",
+          "#efc36c",
+          "#eed7aa",
+          "#f6eee0"
+        ]
+      },
+      "tungsten-ink": {
+        "role": "primary",
+        "displayName": "Tungsten Ink",
+        "canonical": "#1f1406",
+        "tonalRamp": [
+          "#2b2013",
+          "#4a361c",
+          "#755124",
+          "#ad7329",
+          "#d69543",
+          "#dab381",
+          "#e3cfb5",
+          "#f2ebe3"
+        ]
+      },
+      "screen": {
+        "role": "neutral",
+        "displayName": "Screen White",
+        "canonical": "#f4efe6",
+        "tonalRamp": [
+          "#262118",
+          "#403726",
+          "#645335",
+          "#917645",
+          "#b69862",
+          "#c7b594",
+          "#d9d0bf",
+          "#efece6"
+        ]
+      },
+      "live": {
+        "role": "tertiary",
+        "displayName": "Exit Green",
+        "canonical": "#4fae7a",
+        "tonalRamp": [
+          "#18251e",
+          "#264032",
+          "#36634a",
+          "#469068",
+          "#64b588",
+          "#95c6ab",
+          "#bfd9cb",
+          "#e6efea"
+        ]
+      },
+      "stop": {
+        "role": "tertiary",
+        "displayName": "Changeover Red",
+        "canonical": "#ef6a52",
+        "tonalRamp": [
+          "#2d1410",
+          "#4f1f17",
+          "#7e2a1b",
+          "#bc331a",
+          "#e64e32",
+          "#e48877",
+          "#e8b8b0",
+          "#f4e4e1"
+        ]
+      },
+      "screen-2": {
+        "role": "neutral",
+        "displayName": "Screen White 72%",
+        "derivedFrom": "screen"
+      },
+      "screen-3": {
+        "role": "neutral",
+        "displayName": "Screen White 60%",
+        "derivedFrom": "screen"
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Line",
+        "derivedFrom": "screen"
+      },
+      "line-2": {
+        "role": "neutral",
+        "displayName": "Line 2",
+        "derivedFrom": "screen"
+      },
+      "tungsten-tint": {
+        "role": "primary",
+        "displayName": "Tungsten Tint",
+        "derivedFrom": "tungsten"
+      }
+    },
+    "typographyMeta": {
+      "display-hero": {
+        "displayName": "Display Hero",
+        "purpose": "The one question on Welcome and wizard steps."
+      },
+      "display-feature": {
+        "displayName": "Display Feature",
+        "purpose": "Selected wallpaper or playlist title in an inspector."
+      },
+      "display-title": {
+        "displayName": "Display Title",
+        "purpose": "Window toolbar title; 22px in the menu bar panel."
+      },
+      "letter-board": {
+        "displayName": "Letter Board",
+        "purpose": "Letter-board labels only."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Content section headings; Settings group headings at 12px."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "All UI text."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Segments, small buttons, counts, live status."
+      },
+      "detail-term": {
+        "displayName": "Detail Term",
+        "purpose": "Inspector detail terms; same size as values, ranked by weight and case."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Thumbnail metadata, row explanations, chips, Settings tabs."
+      }
+    },
+    "shadows": [
+      {
+        "name": "window",
+        "value": "0 34px 90px rgba(0,0,0,.6), 0 8px 24px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.08)",
+        "purpose": "App windows."
+      },
+      {
+        "name": "sheet",
+        "value": "0 30px 80px rgba(0,0,0,.65), inset 0 0 0 1px rgba(255,255,255,.09)",
+        "purpose": "Sheets."
+      },
+      {
+        "name": "menu-panel",
+        "value": "0 24px 60px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.1)",
+        "purpose": "Menu bar panel, with 30px backdrop blur."
+      },
+      {
+        "name": "control-lift",
+        "value": "0 1px 2px rgba(0,0,0,.4)",
+        "purpose": "Selected segment, switch knob, primary button."
+      },
+      {
+        "name": "letter-board-mount",
+        "value": "0 0 0 3px #0b0908, 0 3px 8px rgba(0,0,0,.5)",
+        "purpose": "Letter-board frame and drop."
+      },
+      {
+        "name": "selection-ring",
+        "value": "0 0 0 2px #f2b544, 0 0 0 5px rgba(242,181,68,.2)",
+        "purpose": "Selected screen panel; hard ring, not a glow."
+      },
+      {
+        "name": "screen-spill",
+        "value": "wallpaper image, blur(26px), opacity .5, inset -18% sides, from 70% down",
+        "purpose": "The only coloured light: the wallpaper's own spill under a strip panel."
+      }
+    ],
+    "motion": [],
+    "breakpoints": [],
+    "platform": {
+      "target": "macOS 15+, SwiftUI",
+      "tokenMapping": "Colour assets in the asset catalog exposed through one Swift token enum; root .tint(tungsten).",
+      "fonts": "Big Shoulders Display (SIL OFL) bundled in the app; SF Pro system font.",
+      "appearance": "Dark only; light appearance undecided (open)."
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one tungsten-filled action per screen.",
+      "html": "<button class=\"ds-btn-pri\">Show on All Screens</button>",
+      "css": ":root{--house:#17120f;--house-2:#1f1915;--house-3:#2a221d;--house-4:#362c25;--tungsten:#f2b544;--tungsten-ink:#1f1406;--screen:#f4efe6;--line:rgba(244,239,230,.10);--line-2:rgba(244,239,230,.16);--live:#4fae7a;--stop:#ef6a52}.ds-btn-pri{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:30px;padding:0 13px;border-radius:8px;border:0;font-family:-apple-system,'SF Pro Text',Inter,system-ui,sans-serif;font-size:13px;font-weight:500;color:#f4efe6;background:#2a221d;box-shadow:inset 0 0 0 1px rgba(244,239,230,.10);cursor:pointer;height:38px;padding:0 18px;font-size:14px;border-radius:10px;background:#f2b544;color:#1f1406;font-weight:650;box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 1px 2px rgba(0,0,0,.4)}.ds-btn-pri:hover{filter:brightness(1.06)}.ds-btn-pri:active{filter:brightness(.94)}.ds-btn-pri:focus-visible{outline:2px solid #f2b544;outline-offset:2px;}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Default push button on house-3.",
+      "html": "<button class=\"ds-btn\">Edit in Studio</button>",
+      "css": ":root{--house:#17120f;--house-2:#1f1915;--house-3:#2a221d;--house-4:#362c25;--tungsten:#f2b544;--tungsten-ink:#1f1406;--screen:#f4efe6;--line:rgba(244,239,230,.10);--line-2:rgba(244,239,230,.16);--live:#4fae7a;--stop:#ef6a52}.ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:30px;padding:0 13px;border-radius:8px;border:0;font-family:-apple-system,'SF Pro Text',Inter,system-ui,sans-serif;font-size:13px;font-weight:500;color:#f4efe6;background:#2a221d;box-shadow:inset 0 0 0 1px rgba(244,239,230,.10);cursor:pointer;}.ds-btn:hover{background:#362c25}.ds-btn:focus-visible{outline:2px solid #f2b544;outline-offset:2px;}"
+    },
+    {
+      "name": "Selected Toggle Button",
+      "kind": "button",
+      "refersTo": "button-selected",
+      "description": "Pressed or selected state: tungsten tint, never a fill.",
+      "html": "<button class=\"ds-btn-sel\" aria-pressed=\"true\">Paint motion</button>",
+      "css": ":root{--house:#17120f;--house-2:#1f1915;--house-3:#2a221d;--house-4:#362c25;--tungsten:#f2b544;--tungsten-ink:#1f1406;--screen:#f4efe6;--line:rgba(244,239,230,.10);--line-2:rgba(244,239,230,.16);--live:#4fae7a;--stop:#ef6a52}.ds-btn-sel{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:30px;padding:0 13px;border-radius:8px;border:0;font-family:-apple-system,'SF Pro Text',Inter,system-ui,sans-serif;font-size:13px;font-weight:500;color:#f4efe6;background:#2a221d;box-shadow:inset 0 0 0 1px rgba(244,239,230,.10);cursor:pointer;height:26px;font-size:12px;background:rgba(242,181,68,.16);color:#f2b544;box-shadow:inset 0 0 0 1px rgba(242,181,68,.45)}.ds-btn-sel:hover{background:rgba(242,181,68,.22)}.ds-btn-sel:focus-visible{outline:2px solid #f2b544;outline-offset:2px;}"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Destructive action in changeover red text.",
+      "html": "<button class=\"ds-btn-danger\">Delete Wallpaper</button>",
+      "css": ":root{--house:#17120f;--house-2:#1f1915;--house-3:#2a221d;--house-4:#362c25;--tungsten:#f2b544;--tungsten-ink:#1f1406;--screen:#f4efe6;--line:rgba(244,239,230,.10);--line-2:rgba(244,239,230,.16);--live:#4fae7a;--stop:#ef6a52}.ds-btn-danger{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:30px;padding:0 13px;border-radius:8px;border:0;font-family:-apple-system,'SF Pro Text',Inter,system-ui,sans-serif;font-size:13px;font-weight:500;color:#f4efe6;background:#2a221d;box-shadow:inset 0 0 0 1px rgba(244,239,230,.10);cursor:pointer;color:#ef6a52}.ds-btn-danger:hover{background:#362c25}.ds-btn-danger:focus-visible{outline:2px solid #f2b544;outline-offset:2px;}"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "search-field",
+      "description": "Toolbar search field.",
+      "html": "<label class=\"ds-field\"><svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\"><circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"M20 20l-3.5-3.5\"/></svg><input placeholder=\"Search wallpapers\" aria-label=\"Search wallpapers\"></label>",
+      "css": ":root{--house:#17120f;--house-2:#1f1915;--house-3:#2a221d;--house-4:#362c25;--tungsten:#f2b544;--tungsten-ink:#1f1406;--screen:#f4efe6;--line:rgba(244,239,230,.10);--line-2:rgba(244,239,230,.16);--live:#4fae7a;--stop:#ef6a52}.ds-field{display:inline-flex;align-items:center;gap:7px;width:200px;height:30px;padding:0 10px;border-radius:8px;background:rgba(244,239,230,.07);box-shadow:inset 0 0 0 1px rgba(244,239,230,.10);color:rgba(244,239,230,.6)}.ds-field input{all:unset;flex:1;color:#f4efe6;font-family:-apple-system,'SF Pro Text',Inter,system-ui,sans-serif;font-size:13px}.ds-field input::placeholder{color:rgba(244,239,230,.6)}.ds-field:focus-within{box-shadow:inset 0 0 0 1px rgba(244,239,230,.10),0 0 0 2px #f2b544}"
+    },
+    {
+      "name": "Sidebar",
+      "kind": "nav",
+      "refersTo": "sidebar",
+      "description": "Seat-red source list; selected item takes the tungsten tint.",
+      "html": "<nav class=\"ds-side\"><div class=\"ds-sec\">Play</div><a class=\"ds-it on\" href=\"#\">Library<span>12</span></a><a class=\"ds-it\" href=\"#\">Favorites<span>4</span></a><a class=\"ds-it\" href=\"#\">Playlists</a><div class=\"ds-sec\">Create</div><a class=\"ds-it\" href=\"#\">My Creations<span>2</span></a></nav>",
+      "css": ":root{--house:#17120f;--house-2:#1f1915;--house-3:#2a221d;--house-4:#362c25;--tungsten:#f2b544;--tungsten-ink:#1f1406;--screen:#f4efe6;--line:rgba(244,239,230,.10);--line-2:rgba(244,239,230,.16);--live:#4fae7a;--stop:#ef6a52}.ds-side{width:224px;padding:14px 10px;display:flex;flex-direction:column;gap:2px;background:linear-gradient(180deg,#3b1519,#2a0f12);font-family:-apple-system,'SF Pro Text',Inter,system-ui,sans-serif;}.ds-sec{font-size:11px;font-weight:600;color:rgba(244,239,230,.62);padding:14px 10px 5px}.ds-it{display:flex;align-items:center;padding:6px 10px;border-radius:8px;color:rgba(244,239,230,.88);font-size:13px;text-decoration:none}.ds-it span{margin-left:auto;font-size:11px;color:rgba(244,239,230,.6);font-variant-numeric:tabular-nums}.ds-it:hover{background:rgba(244,239,230,.06)}.ds-it.on{background:rgba(242,181,68,.16);color:#f2b544}.ds-it:focus-visible{outline:2px solid #f2b544;outline-offset:2px;}"
+    },
+    {
+      "name": "Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Descriptive tag pill on wallpaper details.",
+      "html": "<span class=\"ds-chip\">Scene</span> <span class=\"ds-chip\">Parallax</span>",
+      "css": ":root{--house:#17120f;--house-2:#1f1915;--house-3:#2a221d;--house-4:#362c25;--tungsten:#f2b544;--tungsten-ink:#1f1406;--screen:#f4efe6;--line:rgba(244,239,230,.10);--line-2:rgba(244,239,230,.16);--live:#4fae7a;--stop:#ef6a52}.ds-chip{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:11px;background:rgba(244,239,230,.08);font-family:-apple-system,'SF Pro Text',Inter,system-ui,sans-serif;font-size:11.5px;color:rgba(244,239,230,.72)}"
+    },
+    {
+      "name": "Live and Intermission Status",
+      "kind": "custom",
+      "refersTo": "live",
+      "description": "Live dot in exit green; Intermission always with its reason on a dim board.",
+      "html": "<span class=\"ds-live\">Live on 2 of 3 screens</span> <span class=\"ds-board dim\">Intermission · <em>On battery</em></span>",
+      "css": ":root{--house:#17120f;--house-2:#1f1915;--house-3:#2a221d;--house-4:#362c25;--tungsten:#f2b544;--tungsten-ink:#1f1406;--screen:#f4efe6;--line:rgba(244,239,230,.10);--line-2:rgba(244,239,230,.16);--live:#4fae7a;--stop:#ef6a52}.ds-live{display:inline-flex;align-items:center;gap:6px;font-family:-apple-system,'SF Pro Text',Inter,system-ui,sans-serif;font-size:12px;color:#4fae7a}.ds-live::before{content:'';width:7px;height:7px;border-radius:50%;background:#4fae7a;box-shadow:0 0 0 3px rgba(79,174,122,.18)}.ds-board{display:inline-flex;gap:8px;margin-left:12px;background:#0b0908;padding:5px 11px 4px;font-family:'Big Shoulders Display',Oswald,sans-serif;font-weight:800;text-transform:uppercase;line-height:1;font-size:14px;letter-spacing:.12em;color:#f4efe6;border:1px solid rgba(244,239,230,.2);box-shadow:0 0 0 3px #0b0908}.ds-board em{font-style:normal;color:rgba(244,239,230,.72)}"
+    },
+    {
+      "name": "Display Strip",
+      "kind": "custom",
+      "refersTo": "letter-board",
+      "description": "Signature: each screen at true aspect, a letter board above, the wallpaper's light spilling below.",
+      "html": "<section class=\"ds-strip\" aria-label=\"Your screens\"><div class=\"ds-scr\"><span class=\"ds-lb\">1 · <em>Neon Rain</em></span><div class=\"ds-panel\" style=\"width:150px;height:94px;background:linear-gradient(180deg,#070a1f,#1a0f3a 45%,#3a1240 70%,#140a24)\"><i></i></div></div><div class=\"ds-scr\"><span class=\"ds-lb\">2 · <em>Alpine Dawn</em></span><div class=\"ds-panel sel\" style=\"width:200px;height:112px;background:linear-gradient(180deg,#ffc58f,#f39a7a 38%,#c97b8e 56%,#3a3156)\"><i></i></div></div><div class=\"ds-scr\"><span class=\"ds-lb\">3 · <em>Aurora</em></span><div class=\"ds-panel\" style=\"width:64px;height:114px;background:linear-gradient(180deg,#05101f,#0d2a46)\"><i></i></div></div></section>",
+      "css": ":root{--house:#17120f;--house-2:#1f1915;--house-3:#2a221d;--house-4:#362c25;--tungsten:#f2b544;--tungsten-ink:#1f1406;--screen:#f4efe6;--line:rgba(244,239,230,.10);--line-2:rgba(244,239,230,.16);--live:#4fae7a;--stop:#ef6a52}.ds-strip{position:relative;isolation:isolate;height:206px;border-radius:14px;background:radial-gradient(120% 90% at 50% 110%,#2b1f18,#120d0b 70%);box-shadow:inset 0 0 0 1px rgba(244,239,230,.10);display:flex;align-items:flex-end;justify-content:center;gap:30px;padding:0 24px 34px;overflow:hidden}.ds-scr{display:flex;flex-direction:column;align-items:center;gap:12px}.ds-lb{display:inline-flex;gap:8px;background:#0b0908;border:1px solid rgba(242,181,68,.38);padding:5px 11px 4px;font-family:'Big Shoulders Display',Oswald,sans-serif;font-weight:800;text-transform:uppercase;line-height:1;font-size:14px;letter-spacing:.12em;color:#f4efe6;box-shadow:0 0 0 3px #0b0908,0 3px 8px rgba(0,0,0,.5);white-space:nowrap}.ds-lb em{font-style:normal;color:#f2b544}.ds-panel{position:relative;border-radius:6px;box-shadow:0 0 0 1px rgba(255,255,255,.1)}.ds-panel i{position:absolute;left:-18%;right:-18%;top:70%;height:80%;background:inherit;filter:blur(26px);opacity:.5;z-index:-1;border-radius:50%}.ds-panel.sel{box-shadow:0 0 0 2px #f2b544,0 0 0 5px rgba(242,181,68,.2)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Projection Booth",
+    "overview": "You are the projectionist. Every display the user owns is a screen, and every wallpaper is the feature showing on it. The app is the dark booth behind the glass: warm house-dark charcoal, a deep seat-red sidebar, one tungsten lamp for the action that matters, and screen-white text. The wallpapers are the only saturated light in the room, so the chrome stays warm and dim and lets them carry the colour.\n\nIkigai is a native macOS app (SwiftUI, macOS 15+). Structure and controls are Apple's: a native `NavigationSplitView` sidebar, a unified toolbar, sheets for New Wallpaper and the one-image wizard, a `MenuBarExtra` panel, and a standard tabbed Settings window. The brand is carried by four things only: the tungsten tint, Big Shoulders Display on letter boards and titles, the letter boards themselves, and the display strip. The HTML mockups stand in for SwiftUI; their CSS custom properties map one to one onto app tokens (see Colors).\n\nThe system rejects the category default of a dark Steam-style storefront grid with neon accents, and equally the bland grey utility. Density is that of a Mac productivity app: 13px body, 30px controls, 8px corners.",
+    "keyCharacteristics": [
+      "Warm dark only (house #17120f family); a light appearance is open, not designed.",
+      "One tungsten fill per screen; everything selected is tinted, not filled.",
+      "Big Shoulders Display, uppercase and tracked, only on letter boards and screen or wallpaper titles.",
+      "Neutral shadows; the only coloured light is the wallpaper's own spill under a strip panel.",
+      "Native macOS controls throughout; brand lives in tint, type, letter boards and the display strip."
+    ],
+    "rules": [
+      {
+        "name": "The One Lamp Rule",
+        "body": "Tungsten fills exactly one control per screen: the primary action (\"Show on All Screens\", \"Resume\", \"Create\"). Settings panes have none. A second filled tungsten control on the same screen is a defect.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tint, Not Fill Rule",
+        "body": "Selected and pressed states (sidebar item, Settings tab, Studio layer, toggled tool button) use tungsten at 14–16% alpha with tungsten text and, where needed, a 1px tungsten inset stroke at about 35%. They never use a solid tungsten fill.",
+        "section": "colors"
+      },
+      {
+        "name": "The Marquee Rule",
+        "body": "Big Shoulders Display appears only on letter boards and on screen, sheet or wallpaper titles. Never on buttons, body, rows, labels or numbers.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Size Inspector Rule",
+        "body": "Inspector details (the Showing / Layers / Size / By list, and the \"Show on\" heading above the screen picker) use one size, 12px, ranked only by weight and case: terms are 700 uppercase tracked 0.06em in screen-2, values are 400 in screen.",
+        "section": "typography"
+      },
+      {
+        "name": "The No Glow Rule",
+        "body": "Shadows are neutral black. No tungsten, green or red glows. The single exception is the screen light spill, which is the wallpaper's own colour, never a brand colour. Selection rings (2px tungsten plus a 3px ring at 20% tungsten) and the live dot's 3px ring are hard-edged rings, not blurs.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do fill exactly one control per screen with tungsten (#f2b544) and tint every selected state at 14–16% tungsten with tungsten text.",
+      "Do use native SwiftUI controls, sidebar, toolbar, sheets and Settings tabs, and carry the brand through the root tint, type, letter boards and the display strip.",
+      "Do bundle Big Shoulders Display (OFL) in the app and keep it on letter boards and titles only.",
+      "Do say \"Intermission\" for every paused state and always pair it with its reason.",
+      "Do keep inspector details at one size, ranked by weight and case.",
+      "Do draw every screen at its true aspect, portrait included."
+    ],
+    "donts": [
+      "Don't put a coloured glow on anything; shadows are neutral black, and the screen light spill is the only coloured light.",
+      "Don't use Big Shoulders Display for buttons, body copy, rows or numbers.",
+      "Don't use #e0533d for destructive text; it fails AA on house-3. Use stop (#ef6a52).",
+      "Don't label a paused screen or status \"Paused\", \"Stopped\" or \"Sleeping\", or show Intermission without its reason.",
+      "Don't design a light appearance by inverting tokens; it is undecided and needs its own pass.",
+      "Don't let the seat red leave the sidebar."
+    ]
+  }
+}
