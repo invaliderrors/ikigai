@@ -25,6 +25,7 @@ Ikigai should feel as if Apple had made a Mac version of Wallpaper Engine: nativ
 - **Scene**: layered 2D artwork rendered with Metal. Parallax, particles, shader effects (wave, sway, shake, water ripple, scroll, glow, color grading), masks, and reactions to audio, time and the cursor.
 - **Video**: a looping movie with aspect-fill and per-display cropping.
 - **Web**: HTML/CSS/JS for generative and interactive pieces, running in a locked-down web view.
+- **3D model layers** (later): an animated 3D model placed inside a scene, with camera and lighting presets, rendered by RealityKit.
 
 ## What makes it easy (the signature features)
 
@@ -38,7 +39,7 @@ Ikigai should feel as if Apple had made a Mac version of Wallpaper Engine: nativ
 - **Animated lock screen.** macOS doesn't allow third-party lock-screen wallpapers.
 - **Windows or Linux.**
 - **Importing Wallpaper Engine Workshop items.** Their licensing and format are not ours to use.
-- **Full 3D scenes.** Revisit after the 2D engine is mature.
+- **Full 3D worlds or a 3D editor.** 3D arrives later as model layers inside 2D scenes, with camera and lighting presets (roadmap Phase 8), not as a separate 3D tool.
 
 ## Content and responsibility
 

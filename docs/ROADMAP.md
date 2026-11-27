@@ -59,3 +59,12 @@ Each phase ends with something usable. Later phases may be reordered; earlier on
 - Scripting (JavaScriptCore, sandboxed)
 - 2D mesh / puppet warp for characters (breathing, blinking, hair)
 - Custom shader editor
+
+## Phase 8 — 3D layers
+
+- First one to two weeks: the 3D spike against the budgets in `docs/ARCHITECTURE.md`
+- Model layer: import `.usdz`, loop a built-in animation, composite between 2D layers through RealityKit's off-screen renderer
+- Camera presets (Still, Slow orbit, Follows the mouse, Gentle drift) and lighting presets (Studio, Sunset, Night city, Overcast)
+- Import limits and validation for untrusted models
+- Studio: drop in a model, pick presets, with advanced camera and lighting settings tucked away
+- `.ikigai` format version bump with a migration

@@ -55,7 +55,7 @@ Effects are a closed list per roadmap phase. Phase 2: wave, sway, shake, scroll,
 
 ### What it is not
 
-No physics, 3D, scene-graph editor framework, scripting runtime or general asset pipeline. Video stays on AVFoundation, web on WebKit, depth and subject cut-out on Core ML and Vision. A 3D renderer (likely RealityKit) is out of scope until after Phase 7.
+No physics, scene-graph editor framework, scripting runtime, general asset pipeline or 3D renderer of our own. Video stays on AVFoundation, web on WebKit, depth and subject cut-out on Core ML and Vision, and 3D on RealityKit (see 3D layers below).
 
 ### Why our own
 
@@ -83,6 +83,50 @@ Build the smallest renderer that can draw one real scene, measure it, and build 
 Report the results in the Phase 2 PR, with Instruments traces attached.
 
 Open decision: support Intel Macs or not. Apple Silicon is first either way.
+
+## 3D layers (Phase 8)
+
+3D arrives as a new layer type inside 2D scenes, not as a separate kind of wallpaper. RealityKit renders the model; the scene engine composites it like any other layer.
+
+### How it works
+
+```
+Scene document
+ ├─ image layer   → Metal effect passes ──────────────────────────┐
+ ├─ model layer   → RealityRenderer → texture → effect passes ────├→ composite → screen
+ └─ particle layer → GPU particles ───────────────────────────────┘
+```
+
+- `RealityRenderer` (macOS 15+) renders the model into an `MTLTexture` through `CameraOutput.singleProjection(colorTexture:)`, with a transparent background.
+- Our frame loop calls `updateAndRender(deltaTime:…)`, so the FPS cap and the pause policy apply to 3D unchanged. Paused means the call is not made.
+- Our effects (glow, color grade, ripple…) can run on top of the model layer.
+- Verified in the macOS 15 SDK: `RealityRenderer`, `ParticleEmitterComponent`, `ImageBasedLightComponent`, `ShaderGraphMaterial` and `CustomMaterial` are all available. SceneKit is deprecated and not used.
+
+### The model layer
+
+- **File:** `.usdz` inside the package. Creators export USD from Blender, or convert `.fbx`, `.obj` or `.gltf` with Apple's Reality Converter.
+- **Animation:** one of the animations the file contains, looped.
+- **Camera presets:** Still, Slow orbit, Follows the mouse, Gentle drift. Advanced settings: path, field of view.
+- **Lighting presets:** environment lighting (Studio, Sunset, Night city, Overcast). Advanced settings: shadows, light direction.
+- **Import limits** (untrusted input; numbers set by the spike): a triangle cap (starting at 300k), a maximum texture size (starting at 4K), and a file size cap.
+- **Defaults:** 30 fps, soft shadows off, one environment light.
+- Adding the layer type bumps the `.ikigai` `formatVersion`, with a migration and tests.
+
+### The 3D spike (first one to two weeks of Phase 8)
+
+**Test scene:** one animated `.usdz` model with environment lighting, composited between two image layers, plus mouse parallax, at 30 fps on the baseline and stretch machines from the renderer spike.
+
+| Check | Target |
+|---|---|
+| Paused | 0% CPU and no GPU work when `updateAndRender` is not called |
+| CPU while playing | Under 5% of one core on average |
+| GPU time per frame | Under 8 ms per 4K display |
+| Memory | Under 500 MB for the test scene |
+| Compositing | Clean alpha edges over 2D layers, with no halos |
+
+Fallback if RealityKit fails the spike: render the model layer with our own Metal pipeline (static meshes first, skinning later). That is months of work, not weeks, so it needs a decision before starting.
+
+Content risk: people will import models ripped from games. The gallery's takedown and moderation process (Phase 6) covers 3D files too.
 
 ## Security
 
