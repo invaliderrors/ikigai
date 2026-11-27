@@ -140,3 +140,16 @@ Content risk: people will import models ripped from games. The gallery's takedow
 - Swift 6 language mode with strict concurrency. App code is MainActor by default; `IkigaiCore` is nonisolated and `Sendable`.
 - Tests use Swift Testing in the package. Every phase adds tests for its core logic.
 - Minimum macOS 15.
+
+## Distribution (decided 2026-11-27)
+
+Direct download, notarized with a Developer ID certificate, updated with Sparkle. Not the Mac App Store for now.
+
+- **Why:** ship without review delays, and keep options open for features the App Store sandbox makes harder (system audio capture for audio-reactive wallpapers in Phase 4, the community gallery in Phase 6). An App Store edition can follow once the app is stable.
+- **Needs:** an Apple Developer Program membership for the Developer ID certificate and notarization. Sparkle is added with the first public release, not before.
+- **Releases:** signed, notarized builds attached to GitHub Releases, with Sparkle's appcast pointing at them.
+
+## Starter pack
+
+Until real art exists, the starter pack is a set of original generative web wallpapers bundled in the app (`App/Resources/StarterPack/`). Each is a self-contained page that draws at 30 fps, stops on `ikigai:pause`, honors Reduce Motion, and makes no network requests. They're installed into the library on first launch, tagged "Starter Pack", and can be replaced by commissioned art later.
+

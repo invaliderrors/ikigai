@@ -22,7 +22,7 @@ Each phase ends with something usable. Later phases may be reordered; earlier on
 - [x] Different wallpaper per display, launch at login
 - [x] Previews for web wallpapers
 - [ ] Welcome (first run) and the starter pack
-- [ ] Decide on distribution: Developer ID + notarization + Sparkle updates (likely), or the Mac App Store
+- [x] Decide on distribution: Developer ID + notarization + Sparkle, direct download (see `docs/ARCHITECTURE.md`)
 
 ## Phase 2 — Scene engine
 
