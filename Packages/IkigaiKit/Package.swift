@@ -17,5 +17,6 @@ let package = Package(
         .executableTarget(name: "IkigaiSpike", dependencies: ["IkigaiRender"]),
         .testTarget(name: "IkigaiCoreTests", dependencies: ["IkigaiCore"]),
         .testTarget(name: "IkigaiDesktopTests", dependencies: ["IkigaiDesktop"]),
+        .testTarget(name: "IkigaiRenderTests", dependencies: ["IkigaiRender", "IkigaiCore"]),
     ]
 )
