@@ -15,6 +15,8 @@ import Observation
     private(set) var intermissions: [String: Intermission] = [:]
     private(set) var importsInFlight = 0
     var alert: String?
+    /// Bumped to ask for the Library window; the menu bar icon view opens it.
+    var libraryRequests = 0
 
     private(set) var assignments: ScreenAssignments {
         didSet { Self.save(assignments, key: "screenAssignments") }
@@ -46,6 +48,8 @@ import Observation
             intermissions = desktop.intermissions
         }
         reload()
+        // A first launch shouldn't leave people hunting for a menu bar icon.
+        if wallpapers.isEmpty { libraryRequests += 1 }
     }
 
     // MARK: Reading
