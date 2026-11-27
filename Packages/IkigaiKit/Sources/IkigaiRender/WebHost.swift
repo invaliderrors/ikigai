@@ -8,7 +8,11 @@ import WebKit
     private let webView: WKWebView
     public var view: NSView { webView }
 
-    private static let blockNetwork = #"[{"trigger":{"url-filter":"^(https?|wss?)://"},"action":{"type":"block"}}]"#
+    // Two rules, not one: WebKit's url-filter regex doesn't support alternation like (https?|wss?).
+    private static let blockNetwork = #"""
+        [{"trigger":{"url-filter":"^https?://"},"action":{"type":"block"}},
+         {"trigger":{"url-filter":"^wss?://"},"action":{"type":"block"}}]
+        """#
 
     public init(page: URL, package: URL) {
         let config = WKWebViewConfiguration()
