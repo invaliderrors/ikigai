@@ -151,6 +151,26 @@ private struct WallpaperTile: View {
 
     var body: some View {
         let showing = model.screensShowing(wallpaper)
+        // A real button, so Full Keyboard Access and VoiceOver can reach and activate it.
+        Button(action: select) { label(showing: showing) }
+            .buttonStyle(.plain)
+            .simultaneousGesture(TapGesture(count: 2).onEnded { model.showEverywhere(wallpaper) })
+            .contextMenu {
+                Button("Show on All Screens") { model.showEverywhere(wallpaper) }
+                ForEach(model.screens) { screen in
+                    Button("Show on Screen \(model.number(of: screen)) (\(screen.name))") { model.show(wallpaper, on: screen) }
+                }
+                Divider()
+                Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([wallpaper.packageURL]) }
+                Button("Move to Trash", role: .destructive) { model.moveToTrash(wallpaper) }
+            }
+            .accessibilityLabel(wallpaper.manifest.title)
+            .accessibilityValue(showing.isEmpty ? wallpaper.manifest.kind.label : "Showing on \(showing.map { "Screen \(model.number(of: $0))" }.joined(separator: ", "))")
+            .accessibilityAddTraits(isSelected ? .isSelected : [])
+            .accessibilityAction(named: "Show on All Screens") { model.showEverywhere(wallpaper) }
+    }
+
+    private func label(showing: [ScreenInfo]) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             WallpaperImage(wallpaper: wallpaper)
                 .aspectRatio(16 / 10, contentMode: .fit)
@@ -175,22 +195,6 @@ private struct WallpaperTile: View {
             }
         }
         .contentShape(.rect)
-        // Double-click first: declared after the single click, it would never fire.
-        .onTapGesture(count: 2) { model.showEverywhere(wallpaper) }
-        .onTapGesture(perform: select)
-        .contextMenu {
-            Button("Show on All Screens") { model.showEverywhere(wallpaper) }
-            ForEach(model.screens) { screen in
-                Button("Show on Screen \(model.number(of: screen)) (\(screen.name))") { model.show(wallpaper, on: screen) }
-            }
-            Divider()
-            Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([wallpaper.packageURL]) }
-            Button("Move to Trash", role: .destructive) { model.moveToTrash(wallpaper) }
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
-        .accessibilityAction(.default, select)
-        .accessibilityAction(named: "Show on All Screens") { model.showEverywhere(wallpaper) }
     }
 }
 

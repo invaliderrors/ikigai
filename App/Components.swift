@@ -155,6 +155,22 @@ private struct ScreenPanel: View {
         let wallpaper = model.wallpaper(on: screen)
         let intermission = model.intermissions[screen.id]
         let number = model.number(of: screen)
+        Group {
+            if let onTap {
+                // A real button when it does something, so the keyboard and VoiceOver can use it.
+                Button { onTap(screen) } label: { panel(wallpaper: wallpaper, intermission: intermission, number: number) }
+                    .buttonStyle(.plain)
+            } else {
+                panel(wallpaper: wallpaper, intermission: intermission, number: number)
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Screen \(number), \(screen.name)")
+        .accessibilityValue(intermission.map { "Intermission, \($0.reason)" } ?? wallpaper?.manifest.title ?? "Dark")
+        .accessibilityAddTraits(onTap == nil ? [] : .isButton)
+    }
+
+    private func panel(wallpaper: InstalledWallpaper?, intermission: Intermission?, number: Int) -> some View {
         VStack(spacing: boardSize * 0.8) {
             if let intermission {
                 LetterBoard(lead: "\(number)", feature: "Intermission", dim: true, size: boardSize)
@@ -190,10 +206,5 @@ private struct ScreenPanel: View {
                 .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(.white.opacity(0.1)))
         }
         .contentShape(.rect)
-        .onTapGesture { onTap?(screen) }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Screen \(number), \(screen.name)")
-        .accessibilityValue(intermission.map { "Intermission, \($0.reason)" } ?? wallpaper?.manifest.title ?? "Dark")
-        .accessibilityAddTraits(onTap == nil ? [] : .isButton)
     }
 }
